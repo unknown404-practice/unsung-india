@@ -1,0 +1,124 @@
+You are ANTIGRAVITY 2.0, an expert AI engineer specializing in local LLM deployment. Your task is to help me set up and use a **local LLM** for my project:
+
+**“Unsung India Search” – A National Search Engine for Indians Who Contributed to the Country**
+
+I already have **Ollama** installed on my computer. I want to use **Qwen2.5‑14B** (4‑bit quantized) via Ollama as my main model for:
+
+- Extracting structured biographical data from Wikipedia pages (short bio, contributions, timeline events).
+- Normalizing text into a consistent JSON schema for my database.
+- Optionally generating clean summaries and contribution bullets.
+- Running only in **background ingestion/enrichment jobs**, NOT at query time.
+
+My constraints:
+- I have **188 GB free storage**, so disk space is not a problem.
+- I want a **completely local, free, no‑API‑key** setup.
+- I will use this model only server‑side (backend jobs), not in the browser.
+
+Your tasks:
+
+## 1) Choose the Correct Ollama Model Tag
+
+- Identify the correct Ollama model name and tag for **Qwen2.5‑14B** with **4‑bit quantization** (or the closest efficient quant that Ollama provides).
+- If multiple 14B variants exist, recommend the one that:
+  - Has good instruction‑following quality.
+  - Is reasonably efficient on a single consumer GPU.
+- Provide the exact `ollama pull` command.
+
+If you are not 100% sure about the exact tag name (because Ollama model tags can change), clearly mark that as `[TO VERIFY]` and show me how to:
+- Run `ollama search qwen` or check `https://ollama.com/library` to confirm the exact tag.
+- Then finalize the command.
+
+## 2) Provide Exact Setup Commands
+
+Give me:
+
+1. **Pull command**:
+   - Exact `ollama pull <model>` command for Qwen2.5‑14B (4‑bit or best available quant).
+2. **Run command (interactive test)**:
+   - Example `ollama run <model>` with a simple test prompt to verify it works.
+3. **API usage example**:
+   - Example `curl` command to call the model via Ollama’s local HTTP API (`http://localhost:11434/api/generate`).
+   - Example Python snippet (using `requests`) that:
+     - Sends a prompt.
+     - Receives the generated text.
+     - Parses JSON output (for structured extraction).
+
+Assume:
+- Ollama is already installed and running on `http://localhost:11434`.
+- I want to call it from my FastAPI backend in background jobs.
+
+## 3) Design a Safe Prompt Template for Person Extraction
+
+Create a **reusable prompt template** I can use in my ingestion scripts to extract structured data from Wikipedia text.
+
+Requirements:
+- Input: raw Wikipedia lead section + infobox text for a person.
+- Output: **JSON only**, with fields like:
+  - `name`
+  - `name_local` (array)
+  - `birth_year` (int or null)
+  - `death_year` (int or null)
+  - `state` (string or null)
+  - `domains` (array, e.g. ["freedom", "science"])
+  - `short_bio` (2–3 sentences)
+  - `contributions` (array of 3–7 bullet strings)
+  - `timeline_events` (array of objects: `{ year: int, event: string }`)
+  - `sources` (array of URLs)
+- The prompt must:
+  - Instruct the model to **not invent facts**.
+  - Tell it to leave fields `null` if information is missing.
+  - Force **JSON‑only output** (no explanations).
+  - Be compatible with Qwen2.5‑14B‑Instruct style.
+
+Provide:
+- The full prompt template (with placeholders like `{{WIKI_TEXT}}`).
+- An example filled prompt for a sample person (e.g., “Mahendra Lal Sircar”).
+- An example expected JSON response.
+
+## 4) Integrate into My Backend (Conceptual Code)
+
+Show me:
+
+1. A small Python function `extract_person_details(wiki_text: str) -> dict` that:
+   - Calls Ollama’s `/api/generate` endpoint.
+   - Uses the prompt template from Section 3.
+   - Parses the JSON response.
+   - Handles errors (invalid JSON, empty response).
+2. Guidance on:
+   - Reasonable `num_ctx`, `temperature`, and other Ollama parameters for this task.
+   - How to limit token usage so it runs efficiently on my hardware.
+
+Keep the code simple and ready to drop into my `/scripts` or `/backend` codebase.
+
+## 5) Operational Guidelines
+
+Provide short, clear guidelines on:
+
+- Running this model in **background jobs only** (no live query‑time calls).
+- Rate‑limiting / concurrency:
+  - How many parallel requests to Ollama are safe on a single machine?
+- Monitoring:
+  - What to log (input length, output length, errors).
+- Updates:
+  - How to later switch to a different model (e.g., Qwen2.5‑7B or a newer 14B) with minimal code change.
+
+## 6) Anti‑Hallucination Rules for This LLM Usage
+
+Reinforce that:
+
+- The LLM must **not invent facts**.
+- If information is not in the Wikipedia text, the model must leave fields `null` rather than guessing.
+- All final person records must still be validated against sources (Wikipedia URL, Indian Culture Portal, etc.).
+- In specs and code, label any assumption about model behavior as `[ASSUMPTION]` and verify empirically.
+
+---
+
+## First Output
+
+Start by:
+
+1. Giving me the **exact `ollama pull` command** for the best available **Qwen2.5‑14B** (4‑bit or closest) on Ollama, or clearly mark it as `[TO VERIFY]` with instructions to confirm the tag.
+2. Providing the **interactive `ollama run` test command** and a simple test prompt.
+3. Providing the **`curl` + Python example** to call the model via Ollama’s HTTP API.
+
+Then wait for my confirmation before generating the full prompt template and integration code.

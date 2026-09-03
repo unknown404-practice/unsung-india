@@ -1,0 +1,9 @@
+{
+  "/explore/page": "app/explore/page.js",
+  "/banners/page": "app/banners/page.js",
+  "/api/image-proxy/route": "app/api/image-proxy/route.js",
+  "/heroes/[slug]/page": "app/heroes/[slug]/page.js",
+  "/page": "app/page.js",
+  "/api/qwen/search/route": "app/api/qwen/search/route.js",
+  "/about/page": "app/about/page.js"
+}
