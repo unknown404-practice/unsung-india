@@ -1,0 +1,19 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+frontend/.next/
+.next/
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Environment and IDE
+.env*.local
+.vscode/
+.DS_Store
