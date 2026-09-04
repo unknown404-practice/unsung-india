@@ -206,7 +206,141 @@ export async function POST(request: NextRequest) {
       ? wikiExtract.split('. ').slice(0, 3).join('. ') + '.'
       : `${finalName} was an eminent Indian contributor whose monumental legacy shaped our national history.`;
 
-    const tagline = `An immortal contributor to India's ${domain.toLowerCase()}.`;
+    // 3. Optional Cloud AI Synthesis (Qwen 2.5 via Groq, OpenRouter, Together AI, or Local Ollama)
+    let aiEnhancedTagline = tagline;
+    let aiEnhancedContributions = [
+      {
+        id: '1',
+        display_order: 1,
+        title: 'Historic National Contribution',
+        description: `Dedicated their life to ${domain.toLowerCase()}, leaving an enduring impact on Indian history.`,
+      },
+      {
+        id: '2',
+        display_order: 2,
+        title: 'National & Global Impact',
+        description: `Pioneered advancements in ${domain.toLowerCase()} that continue to inspire generations.`,
+      },
+    ];
+    let aiEnhancedUnsungReason = `Their remarkable contributions to ${domain.toLowerCase()} played a foundational role in India's progress.`;
+    let aiSource = 'LIVE_WIKIPEDIA_PARALLEL_DISCOVERY';
+
+    const groqKey = process.env.GROQ_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    const togetherKey = process.env.TOGETHER_API_KEY;
+    const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434/api/generate';
+
+    try {
+      if (groqKey) {
+        // Groq Fast Qwen / Llama Inference (500 tokens/sec)
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an Indic historical scholar. Return valid JSON only with keys: tagline (string), unsung_reason (string), contributions (array of 2-3 objects with title and description).',
+              },
+              {
+                role: 'user',
+                content: `Person: ${finalName}\nState: ${state}\nDomain: ${domain}\nBio: ${shortBio}`,
+              },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: 0.3,
+          }),
+        });
+
+        if (groqRes.ok) {
+          const gJson = await groqRes.json();
+          const parsed = JSON.parse(gJson.choices?.[0]?.message?.content || '{}');
+          if (parsed.tagline) aiEnhancedTagline = parsed.tagline;
+          if (parsed.unsung_reason) aiEnhancedUnsungReason = parsed.unsung_reason;
+          if (Array.isArray(parsed.contributions) && parsed.contributions.length > 0) {
+            aiEnhancedContributions = parsed.contributions.map((c: any, i: number) => ({
+              id: String(i + 1),
+              display_order: i + 1,
+              title: c.title || `Milestone ${i + 1}`,
+              description: c.description || c,
+            }));
+          }
+          aiSource = 'QWEN_CLOUD_AI_GROQ';
+        }
+      } else if (openrouterKey) {
+        // OpenRouter Qwen 2.5 72B
+        const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openrouterKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'qwen/qwen-2.5-72b-instruct',
+            messages: [
+              {
+                role: 'system',
+                content: 'Return JSON only with keys: tagline, unsung_reason, contributions.',
+              },
+              {
+                role: 'user',
+                content: `Synthesize historical profile for ${finalName} (${state}, ${domain}): ${shortBio}`,
+              },
+            ],
+            response_format: { type: 'json_object' },
+          }),
+        });
+        if (orRes.ok) {
+          const orJson = await orRes.json();
+          const parsed = JSON.parse(orJson.choices?.[0]?.message?.content || '{}');
+          if (parsed.tagline) aiEnhancedTagline = parsed.tagline;
+          if (parsed.unsung_reason) aiEnhancedUnsungReason = parsed.unsung_reason;
+          if (Array.isArray(parsed.contributions)) {
+            aiEnhancedContributions = parsed.contributions.map((c: any, i: number) => ({
+              id: String(i + 1),
+              display_order: i + 1,
+              title: c.title || `Milestone ${i + 1}`,
+              description: c.description || c,
+            }));
+          }
+          aiSource = 'QWEN_2.5_72B_CLOUD';
+        }
+      } else {
+        // Local Ollama Qwen Fallback (for local machine)
+        const ollamaRes = await fetch(ollamaUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'qwen2.5:14b',
+            prompt: `Summarize 2 key historical contributions of ${finalName} from ${state} in JSON format: {"tagline": "...", "contributions": [{"title": "...", "description": "..."}]}`,
+            stream: false,
+            format: 'json',
+          }),
+          signal: AbortSignal.timeout(1500),
+        }).catch(() => null);
+
+        if (ollamaRes && ollamaRes.ok) {
+          const oJson = await ollamaRes.json();
+          const parsed = JSON.parse(oJson.response || '{}');
+          if (parsed.tagline) aiEnhancedTagline = parsed.tagline;
+          if (Array.isArray(parsed.contributions) && parsed.contributions.length > 0) {
+            aiEnhancedContributions = parsed.contributions.map((c: any, i: number) => ({
+              id: String(i + 1),
+              display_order: i + 1,
+              title: c.title || `Milestone ${i + 1}`,
+              description: c.description || c,
+            }));
+          }
+          aiSource = 'QWEN_2.5_14B_LOCAL_OLLAMA';
+        }
+      }
+    } catch (aiErr) {
+      console.warn('AI inference fallback to Wikipedia:', aiErr);
+    }
 
     const dynamicHero = {
       id: slug,
@@ -218,26 +352,13 @@ export async function POST(request: NextRequest) {
       era: birthYear && deathYear ? `${birthYear} – ${deathYear}` : 'Historical Era',
       state,
       primary_domain: domain,
-      tagline,
+      tagline: aiEnhancedTagline,
       short_bio: shortBio,
       image_url: imageUrl,
       source_attribution: wikiUrl,
       unsung_level: 'Legendary',
-      contributions: [
-        {
-          id: '1',
-          display_order: 1,
-          title: 'Historic National Contribution',
-          description: `Dedicated their life to ${domain.toLowerCase()}, leaving an enduring impact on Indian history.`,
-        },
-        {
-          id: '2',
-          display_order: 2,
-          title: 'National & Global Impact',
-          description: `Pioneered advancements in ${domain.toLowerCase()} that continue to inspire generations.`,
-        },
-      ],
-      is_unsung_reason: `Their remarkable contributions to ${domain.toLowerCase()} played a foundational role in India's progress.`,
+      contributions: aiEnhancedContributions,
+      is_unsung_reason: aiEnhancedUnsungReason,
     };
 
     const durationMs = Date.now() - startTime;
@@ -245,7 +366,7 @@ export async function POST(request: NextRequest) {
     const responsePayload = {
       hero: dynamicHero,
       duration_ms: durationMs,
-      source: 'LIVE_WIKIPEDIA_PARALLEL_DISCOVERY',
+      source: aiSource,
     };
 
     // Cache in Memory (< 1ms next time)
