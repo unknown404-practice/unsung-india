@@ -155,28 +155,39 @@ export async function generateHistoricalSynthesis(params: {
     }
   }
 
-  // 5. Local Ollama Qwen (for localhost development)
+  // 5. Local Containerized / Host Ollama Qwen (Docker or Localhost)
   const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434/api/generate';
-  try {
-    const res = await fetch(ollamaUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'qwen2.5:14b',
-        prompt: `${systemPrompt}\n\n${userPrompt}`,
-        stream: false,
-        format: 'json',
-      }),
-      signal: AbortSignal.timeout(1500),
-    });
+  const preferredModel = process.env.OLLAMA_MODEL || 'qwen2.5:14b';
+  const candidateModels = [preferredModel, 'qwen2.5:7b', 'qwen2.5:3b', 'qwen2.5:1.5b', 'qwen2.5:latest'];
+  const uniqueModels = Array.from(new Set(candidateModels));
 
-    if (res.ok) {
-      const json = await res.json();
-      const parsed = parseJsonResponse(json.response);
-      if (parsed) return { ...parsed, provider: 'LOCAL_OLLAMA_QWEN_2.5_14B' };
+  for (const model of uniqueModels) {
+    try {
+      const res = await fetch(ollamaUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt: `${systemPrompt}\n\n${userPrompt}`,
+          stream: false,
+          format: 'json',
+          options: {
+            temperature: 0.2,
+            top_p: 0.85,
+            num_ctx: 4096,
+          },
+        }),
+        signal: AbortSignal.timeout(25000),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        const parsed = parseJsonResponse(json.response);
+        if (parsed) return { ...parsed, provider: `DOCKER_LOCAL_OLLAMA_${model.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` };
+      }
+    } catch {
+      // Continue to next local model or return null
     }
-  } catch {
-    // Local Ollama unavailable
   }
 
   return null;

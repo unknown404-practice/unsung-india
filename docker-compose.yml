@@ -1,7 +1,37 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # 1. Local Containerized Ollama Qwen AI Engine
+  ollama:
+    image: ollama/ollama:latest
+    container_name: unsung_heroes_prod_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+
+  # 2. Automated Model Puller (Pulls Qwen 2.5 automatically on container startup)
+  ollama-pull:
+    image: curlimages/curl:latest
+    container_name: unsung_heroes_ollama_pull
+    restart: "no"
+    depends_on:
+      - ollama
+    entrypoint: >
+      sh -c "
+        echo 'Waiting for Ollama container to start...';
+        while ! curl -s http://ollama:11434/api/tags > /dev/null; do
+          sleep 2;
+        done;
+        echo 'Ollama is online. Pulling Qwen 2.5 model (${OLLAMA_MODEL:-qwen2.5:7b})...';
+        curl -s -X POST http://ollama:11434/api/pull -d '{\"name\": \"${OLLAMA_MODEL:-qwen2.5:7b}\"}';
+        echo 'Qwen 2.5 model successfully provisioned inside Docker!';
+      "
+
+  # 3. PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: unsung_heroes_prod_db
@@ -20,7 +50,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # FastAPI Backend API
+  # 4. FastAPI Backend API
   backend:
     build:
       context: ./backend
@@ -36,11 +66,13 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/${POSTGRES_DB:-unsung_heroes}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-production_secret_key_change_in_env}
       - ALLOWED_ORIGINS=["http://localhost:3000","https://unsungheroes.in","https://*.vercel.app"]
+      - OLLAMA_API_URL=http://ollama:11434/api/generate
+      - DEFAULT_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Next.js Production Frontend
+  # 5. Next.js Production Frontend
   frontend:
     build:
       context: ./frontend
@@ -52,8 +84,16 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_BASE_URL=http://backend:8000/api/v1
+      - OLLAMA_URL=http://ollama:11434/api/generate
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY:-}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
     depends_on:
       - backend
+      - ollama
 
 volumes:
   pgdata_prod:
+  ollama_models:
+

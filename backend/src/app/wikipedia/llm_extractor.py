@@ -5,11 +5,13 @@ from typing import Optional, Dict, Any, List
 import httpx
 from pydantic import BaseModel, Field
 
+import os
+
 logger = logging.getLogger("qwen_extractor")
 logger.setLevel(logging.INFO)
 
-OLLAMA_API_URL = "http://127.0.0.1:11434/api/generate"
-DEFAULT_MODEL = "qwen2.5:14b"
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://127.0.0.1:11434/api/generate")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "qwen2.5:14b")
 
 
 class ExtractedPersonSchema(BaseModel):

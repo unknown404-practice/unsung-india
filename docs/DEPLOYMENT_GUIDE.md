@@ -22,12 +22,19 @@ The Next.js 14 App Router frontend is 100% self-contained with built-in API rout
 
 ---
 
-## 🐳 Option 2: 1-Command Self-Hosted Docker Compose (Sovereign Linux VPS)
+## 🐳 Option 2: 1-Command Self-Hosted Docker Compose (with Containerized Local Qwen 2.5)
 
-Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud data centers.
+Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud data centers. If Cloud AI keys are absent or exhausted, the system automatically falls back to the **local Qwen 2.5 container** inside Docker.
+
+### Architecture in Docker:
+- **`ollama`**: Containerized Ollama instance running Qwen 2.5 (`qwen2.5:7b` or `qwen2.5:14b`).
+- **`ollama-pull`**: Auto-provisions and pulls the Qwen 2.5 model on first boot.
+- **`postgres`**: PostgreSQL 16 database with health check.
+- **`backend`**: FastAPI asynchronous ingestion and API service.
+- **`frontend`**: Next.js 14 standalone container connected to `ollama` and `backend`.
 
 ### Prerequisites:
-- Ubuntu 22.04 / 24.04 LTS or any Linux server with Docker & Docker Compose installed.
+- Ubuntu 22.04 / 24.04 LTS or any OS with Docker & Docker Compose installed.
 
 ### Steps:
 1. Clone the repository on your server:
@@ -36,9 +43,9 @@ Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud
    cd unsung-heroes-india
    ```
 
-2. Create production environment configuration:
+2. Create production environment configuration (optional API keys):
    ```bash
-   cp .env.example .env.production
+   cp .env.example .env
    ```
 
 3. Build and launch all containers in the background:
@@ -46,12 +53,13 @@ Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud
    docker compose up -d --build
    ```
 
-4. Verify services are running:
+4. Verify all services and the local Qwen container:
    ```bash
    docker compose ps
    ```
    * Frontend: `http://<your-server-ip>:3000`
    * Backend API: `http://<your-server-ip>:8000/docs`
+   * Ollama Local AI: `http://<your-server-ip>:11434`
    * PostgreSQL: `localhost:5432`
 
 5. (Optional) Set up Nginx Reverse Proxy with SSL (Certbot):
