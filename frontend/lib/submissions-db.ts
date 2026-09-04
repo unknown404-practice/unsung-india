@@ -78,7 +78,7 @@ const INITIAL_SUBMISSIONS: SubmissionRecord[] = [
       'Embraced the gallows smiling at just 18 years old, igniting Bengali revolutionary songs.'
     ],
     sources_text: 'National Archives of India (Muzaffarpur Conspiracy Case File); PIB Bengal Martyrs Series.',
-    image_url: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Khudiram_Bose.jpg',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/8/86/Khudiram_Bose_1905.jpg',
     image_license_declared: 'PUBLIC_DOMAIN',
     status: 'SUBMITTED',
     created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -101,7 +101,7 @@ const INITIAL_SUBMISSIONS: SubmissionRecord[] = [
       'Formed the Desasevini Sangh volunteer brigade for women independence workers.'
     ],
     sources_text: 'Kerala State Archives gazetteer; PIB Women Freedom Fighters of India.',
-    image_url: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Akkamma_Cherian_1990_stamp_of_India.jpg',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Akkamma_Cherian.jpg',
     image_license_declared: 'PUBLIC_DOMAIN',
     status: 'SUBMITTED',
     created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
@@ -124,11 +124,35 @@ const INITIAL_SUBMISSIONS: SubmissionRecord[] = [
       'Executed by the British regime at Thane Jail in 1910.'
     ],
     sources_text: 'Maharashtra State Archives; Abhinav Bharat Historical Society records.',
-    image_url: 'https://upload.wikimedia.org/wikipedia/commons/5/52/Krishnaji_Gopal_Karve.jpg',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/8/88/Revolutionary_Krishna_Karve.jpg',
     image_license_declared: 'PUBLIC_DOMAIN',
     status: 'SUBMITTED',
     created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
     updated_at: new Date(Date.now() - 3600000 * 5).toISOString()
+  },
+  {
+    id: 'sub-004',
+    submitter_name: 'Ananya Banerjee',
+    submitter_email: 'ananya@presidency.edu.in',
+    hero_name: 'Bina Das',
+    hero_name_local: 'বীণা দাস',
+    state: 'West Bengal',
+    primary_domain: 'Freedom Struggle',
+    birth_year: 1911,
+    death_year: 1986,
+    short_bio: 'Bina Das was an Indian revolutionary and nationalist from West Bengal who attempted to assassinate Bengal Governor Stanley Jackson in 1932.',
+    key_contributions: [
+      'Fired shots at Governor Stanley Jackson during the Calcutta University convocation ceremony.',
+      'Active leader of the Chhatri Sangha women student resistance in Bengal.',
+      'Awarded Padma Shri in 1960 for dedicated social work.'
+    ],
+    sources_text: 'Autobiography Shrinkhal Jhankar; Calcutta Police Special Branch records.',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Bina_Das_revolutionary.jpg',
+    image_license_declared: 'PUBLIC_DOMAIN',
+    status: 'APPROVED',
+    approved_hero_slug: 'bina-das',
+    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    updated_at: new Date(Date.now() - 3600000 * 2).toISOString()
   }
 ];
 
