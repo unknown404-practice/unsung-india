@@ -11,6 +11,8 @@ import {
   Sparkles,
   Radio,
   Sliders,
+  CheckCircle2,
+  Download,
 } from 'lucide-react';
 import { Hero } from '../lib/types';
 
@@ -19,217 +21,169 @@ interface HeroAudioPlayerProps {
 }
 
 const SUPPORTED_LANGUAGES = [
-  { code: 'en-IN', label: 'English (Indian Accent)', lang: 'en', flag: '🇮🇳' },
-  { code: 'hi-IN', label: 'Hindi (हिंदी)', lang: 'hi', flag: '🇮🇳' },
-  { code: 'bn-IN', label: 'Bengali (বাংলা)', lang: 'bn', flag: '🇮🇳' },
-  { code: 'ta-IN', label: 'Tamil (தமிழ்)', lang: 'ta', flag: '🇮🇳' },
-  { code: 'te-IN', label: 'Telugu (తెలుగు)', lang: 'te', flag: '🇮🇳' },
-  { code: 'mr-IN', label: 'Marathi (मराठी)', lang: 'mr', flag: '🇮🇳' },
-  { code: 'gu-IN', label: 'Gujarati (ગુજરાતી)', lang: 'gu', flag: '🇮🇳' },
-  { code: 'kn-IN', label: 'Kannada (ಕನ್ನಡ)', lang: 'kn', flag: '🇮🇳' },
+  { code: 'hi', label: 'Hindi (हिंदी)', flag: '🇮🇳', scriptName: 'हिंदी' },
+  { code: 'bn', label: 'Bengali (বাংলা)', flag: '🇮🇳', scriptName: 'বাংলা' },
+  { code: 'ta', label: 'Tamil (தமிழ்)', flag: '🇮🇳', scriptName: 'தமிழ்' },
+  { code: 'te', label: 'Telugu (తెలుగు)', flag: '🇮🇳', scriptName: 'తెలుగు' },
+  { code: 'mr', label: 'Marathi (मराठी)', flag: '🇮🇳', scriptName: 'मराठी' },
+  { code: 'gu', label: 'Gujarati (ગુજરાતી)', flag: '🇮🇳', scriptName: 'ગુજરાતી' },
+  { code: 'kn', label: 'Kannada (ಕನ್ನಡ)', flag: '🇮🇳', scriptName: 'ಕನ್ನಡ' },
+  { code: 'en', label: 'English (Indian Accent)', flag: '🇮🇳', scriptName: 'English' },
 ];
 
 export default function HeroAudioPlayer({ hero }: HeroAudioPlayerProps) {
+  const [selectedLang, setSelectedLang] = useState('hi');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedLang, setSelectedLang] = useState('en-IN');
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [activeVoiceName, setActiveVoiceName] = useState<string>('');
-  const [progressPercent, setProgressPercent] = useState(0);
+  const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
+  const [indicSubtitles, setIndicSubtitles] = useState<string>('');
+  const [audioChunks, setAudioChunks] = useState<string[]>([]);
+  const [sentenceList, setSentenceList] = useState<string[]>([]);
 
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const textToReadRef = useRef<string>('');
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
 
-  // Prepare full narration script
-  useEffect(() => {
-    const lifespan =
-      hero.birth_year && hero.death_year
-        ? `lived from ${hero.birth_year} to ${hero.death_year}`
-        : hero.era || 'a historical era';
+  // Load / Prepare Audio Data whenever hero or language changes
+  const prepareAudioStream = async (targetLang: string) => {
+    setIsLoadingAudio(true);
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hero, lang: targetLang }),
+      });
 
-    const contribsSummary =
-      hero.contributions && hero.contributions.length > 0
-        ? hero.contributions
-            .map((c, i) => `Achievement ${i + 1}: ${c.title}. ${c.description}`)
-            .join(' ')
-        : '';
-
-    const script = `National hero narration: ${hero.name}. ${
-      hero.name_local ? `In native script, ${hero.name_local}.` : ''
-    } From ${hero.state}. Domain: ${hero.primary_domain}. Timeline: ${lifespan}. Tagline: ${
-      hero.tagline
-    }. Biography: ${hero.short_bio}. Key Contributions: ${contribsSummary}. Historical Significance: ${
-      hero.is_unsung_reason
-    }.`;
-
-    textToReadRef.current = script;
-  }, [hero]);
-
-  // Load available system voices
-  useEffect(() => {
-    const loadVoices = () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const voices = window.speechSynthesis.getVoices();
-        setAvailableVoices(voices);
+      if (res.ok) {
+        const data = await res.json();
+        setIndicSubtitles(data.spokenText || '');
+        setSentenceList(data.sentences || []);
+        setAudioChunks(data.audioUrls || []);
+        setActiveSentenceIndex(0);
       }
-    };
-
-    loadVoices();
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
+    } catch (err) {
+      console.error('Audio preparation notice:', err);
+    } finally {
+      setIsLoadingAudio(false);
     }
+  };
 
-    return () => {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []);
-
-  // Update active voice when language changes
   useEffect(() => {
-    const prefix = selectedLang.split('-')[0];
-    const match =
-      availableVoices.find((v) => v.lang.toLowerCase() === selectedLang.toLowerCase()) ||
-      availableVoices.find((v) => v.lang.toLowerCase().startsWith(prefix)) ||
-      availableVoices.find((v) => v.lang.toLowerCase().includes('in')) ||
-      availableVoices[0];
-
-    if (match) {
-      setActiveVoiceName(match.name);
-    }
-  }, [selectedLang, availableVoices]);
+    handleStop();
+    prepareAudioStream(selectedLang);
+  }, [hero.id, selectedLang]);
 
   // Handle Play / Resume / Pause
-  const handlePlayPause = () => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      alert('Speech synthesis is not supported in this browser.');
-      return;
-    }
-
+  const handlePlayPause = async () => {
     if (isPlaying && !isPaused) {
-      window.speechSynthesis.pause();
-      setIsPaused(true);
-      return;
-    }
-
-    if (isPaused) {
-      window.speechSynthesis.resume();
-      setIsPaused(false);
-      return;
-    }
-
-    // Start fresh playback
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(textToReadRef.current);
-    utterance.rate = playbackSpeed;
-    utterance.pitch = 1.0;
-    utterance.volume = isMuted ? 0 : 1.0;
-
-    // Pick best matching voice
-    const prefix = selectedLang.split('-')[0];
-    const voice =
-      availableVoices.find((v) => v.lang.toLowerCase() === selectedLang.toLowerCase()) ||
-      availableVoices.find((v) => v.lang.toLowerCase().startsWith(prefix)) ||
-      availableVoices.find((v) => v.lang.toLowerCase().includes('in')) ||
-      availableVoices[0];
-
-    if (voice) {
-      utterance.voice = voice;
-      utterance.lang = voice.lang;
-    } else {
-      utterance.lang = selectedLang;
-    }
-
-    utterance.onstart = () => {
-      setIsPlaying(true);
-      setIsPaused(false);
-      setProgressPercent(10);
-    };
-
-    utterance.onboundary = (event) => {
-      if (textToReadRef.current.length > 0) {
-        const charIndex = event.charIndex;
-        const totalChars = textToReadRef.current.length;
-        const pct = Math.min(100, Math.round((charIndex / totalChars) * 100));
-        setProgressPercent(pct);
+      if (audioElementRef.current) {
+        audioElementRef.current.pause();
+        setIsPaused(true);
       }
-    };
+      return;
+    }
 
-    utterance.onend = () => {
+    if (isPaused && audioElementRef.current) {
+      audioElementRef.current.play();
+      setIsPaused(false);
+      return;
+    }
+
+    // If audio chunks not loaded yet, load them first
+    if (audioChunks.length === 0) {
+      await prepareAudioStream(selectedLang);
+    }
+
+    if (audioChunks.length > 0) {
+      playSentence(0);
+    }
+  };
+
+  const playSentence = (index: number) => {
+    if (index >= audioChunks.length) {
       setIsPlaying(false);
       setIsPaused(false);
-      setProgressPercent(100);
-      setTimeout(() => setProgressPercent(0), 1500);
+      setActiveSentenceIndex(0);
+      return;
+    }
+
+    setActiveSentenceIndex(index);
+    setIsPlaying(true);
+    setIsPaused(false);
+
+    if (audioElementRef.current) {
+      audioElementRef.current.pause();
+    }
+
+    const audio = new Audio(audioChunks[index]);
+    audio.playbackRate = playbackSpeed;
+
+    audio.onended = () => {
+      playSentence(index + 1);
     };
 
-    utterance.onerror = (e) => {
-      console.warn('Speech synthesis notice:', e);
+    audio.onerror = () => {
+      console.warn('Audio chunk playback notice, moving to next');
+      playSentence(index + 1);
+    };
+
+    audioElementRef.current = audio;
+    audio.play().catch((e) => {
+      console.warn('Audio play notice:', e);
       setIsPlaying(false);
-      setIsPaused(false);
-      setProgressPercent(0);
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    });
   };
 
   const handleStop = () => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setIsPaused(false);
-      setProgressPercent(0);
+    if (audioElementRef.current) {
+      audioElementRef.current.pause();
+      audioElementRef.current = null;
     }
+    setIsPlaying(false);
+    setIsPaused(false);
+    setActiveSentenceIndex(0);
   };
 
   const handleSpeedChange = (speed: number) => {
     setPlaybackSpeed(speed);
-    if (isPlaying) {
-      handleStop();
-      setTimeout(handlePlayPause, 100);
+    if (audioElementRef.current) {
+      audioElementRef.current.playbackRate = speed;
     }
   };
 
+  const currentLanguageObj = SUPPORTED_LANGUAGES.find((l) => l.code === selectedLang) || SUPPORTED_LANGUAGES[0];
+
   return (
-    <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-saffron-950/20 border border-saffron-500/30 p-4 sm:p-5 shadow-xl space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-950 to-saffron-950/20 border border-saffron-500/30 p-5 shadow-2xl space-y-4">
+      {/* Header & Multilingual Selector */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-saffron-500/15 border border-saffron-500/30 flex items-center justify-center text-saffron-400">
+          <div className="w-10 h-10 rounded-xl bg-saffron-500/15 border border-saffron-500/30 flex items-center justify-center text-saffron-400 shadow-sm">
             <Radio className="w-5 h-5 animate-pulse" />
           </div>
           <div>
             <h4 className="font-cinematic text-sm sm:text-base font-bold text-white flex items-center gap-2">
               <span>Oral History Narration</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-saffron-500/20 text-saffron-300 border border-saffron-500/30">
-                MULTILINGUAL TTS
+              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                FLUENT INDIC SPEECH
               </span>
             </h4>
             <p className="text-[11px] text-slate-400">
-              Listen to the complete heroic story in your chosen Indic voice.
+              Listen to the complete heroic story spoken fluently in native Indian languages.
             </p>
           </div>
         </div>
 
-        {/* Language Selector Dropdown */}
+        {/* Language Selector */}
         <div className="flex items-center gap-2">
           <Languages className="w-4 h-4 text-saffron-400" />
           <select
             value={selectedLang}
-            onChange={(e) => {
-              setSelectedLang(e.target.value);
-              if (isPlaying) {
-                handleStop();
-              }
-            }}
-            className="px-3 py-1.5 rounded-xl bg-slate-900 border border-white/15 text-xs text-white focus:outline-none focus:border-saffron-500 transition-all font-medium"
+            onChange={(e) => setSelectedLang(e.target.value)}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-saffron-500/40 text-xs text-white focus:outline-none focus:border-saffron-400 transition-all font-semibold shadow-inner"
           >
             {SUPPORTED_LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code} className="bg-slate-950 text-white">
+              <option key={lang.code} value={lang.code} className="bg-slate-950 text-white font-medium">
                 {lang.flag} {lang.label}
               </option>
             ))}
@@ -237,19 +191,55 @@ export default function HeroAudioPlayer({ hero }: HeroAudioPlayerProps) {
         </div>
       </div>
 
-      {/* Playback Controls & Progress */}
+      {/* Spoken Text & Live Subtitles in Selected Indic Script */}
+      {indicSubtitles && (
+        <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-saffron-400 font-mono">
+            <span>Live Subtitles ({currentLanguageObj.scriptName})</span>
+            {isPlaying && (
+              <span className="flex items-center gap-1 text-emerald-400 animate-pulse">
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Speaking sentence {activeSentenceIndex + 1} of {sentenceList.length}</span>
+              </span>
+            )}
+          </div>
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-indic">
+            {sentenceList.length > 0 ? (
+              sentenceList.map((sentence, idx) => (
+                <span
+                  key={idx}
+                  className={`transition-all duration-300 rounded px-1 ${
+                    isPlaying && idx === activeSentenceIndex
+                      ? 'bg-saffron-500/25 text-saffron-200 font-semibold border-b border-saffron-400'
+                      : 'opacity-85'
+                  }`}
+                >
+                  {sentence}{' '}
+                </span>
+              ))
+            ) : (
+              <span>{indicSubtitles}</span>
+            )}
+          </p>
+        </div>
+      )}
+
+      {/* Audio Controls */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
-        {/* Main Buttons */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Main Play/Pause Button */}
           <button
             onClick={handlePlayPause}
-            className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md ${
+            disabled={isLoadingAudio}
+            className={`flex-1 sm:flex-initial px-6 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md ${
               isPlaying && !isPaused
                 ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20'
                 : 'bg-saffron-500 hover:bg-saffron-400 text-slate-950 shadow-saffron-500/20'
-            }`}
+            } disabled:opacity-50`}
           >
-            {isPlaying && !isPaused ? (
+            {isLoadingAudio ? (
+              <span>Loading Audio...</span>
+            ) : isPlaying && !isPaused ? (
               <>
                 <Pause className="w-4 h-4" />
                 <span>Pause Narration</span>
@@ -257,16 +247,17 @@ export default function HeroAudioPlayer({ hero }: HeroAudioPlayerProps) {
             ) : (
               <>
                 <Play className="w-4 h-4 fill-slate-950" />
-                <span>{isPaused ? 'Resume Story' : 'Listen to Story'}</span>
+                <span>{isPaused ? 'Resume Narration' : `Listen in ${currentLanguageObj.scriptName}`}</span>
               </>
             )}
           </button>
 
+          {/* Stop / Reset Button */}
           <button
             onClick={handleStop}
             disabled={!isPlaying && !isPaused}
             className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-white/10 transition-all disabled:opacity-40"
-            title="Reset playback"
+            title="Stop & Reset"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -289,7 +280,7 @@ export default function HeroAudioPlayer({ hero }: HeroAudioPlayerProps) {
           </div>
         </div>
 
-        {/* Audio Visualizer Waves when playing */}
+        {/* Dynamic Sound Waveform Bars */}
         <div className="flex items-center gap-1.5 h-6">
           {[40, 75, 100, 60, 90, 45, 80, 50, 95, 30].map((h, i) => (
             <div
@@ -298,31 +289,13 @@ export default function HeroAudioPlayer({ hero }: HeroAudioPlayerProps) {
                 isPlaying && !isPaused ? 'animate-pulse' : 'opacity-30'
               }`}
               style={{
-                height: isPlaying && !isPaused ? `${Math.max(20, (h * (i % 2 === 0 ? 1 : 0.7)))}%` : '20%',
+                height: isPlaying && !isPaused ? `${Math.max(20, h * (i % 2 === 0 ? 1 : 0.7))}%` : '20%',
                 animationDelay: `${i * 80}ms`,
               }}
             />
           ))}
         </div>
       </div>
-
-      {/* Progress Track */}
-      {progressPercent > 0 && (
-        <div className="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden border border-white/5">
-          <div
-            className="bg-gradient-to-r from-saffron-500 to-emerald-400 h-full transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-      )}
-
-      {/* Voice Info */}
-      {activeVoiceName && (
-        <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-0.5">
-          <span>Active Synthesizer: {activeVoiceName}</span>
-          <span>Speed: {playbackSpeed}x</span>
-        </div>
-      )}
     </div>
   );
 }
