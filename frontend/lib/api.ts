@@ -1,5 +1,52 @@
-import { Hero, SearchResponse } from './types';
+import { Hero, SearchResponse, BannerTemplate } from './types';
 import { SAMPLE_HEROES } from './sample-data';
+
+export const SAMPLE_BANNER_TEMPLATES: BannerTemplate[] = [
+  {
+    id: 'metro-pillar-9-16',
+    name: 'Metro Pillar & Smart Display (9:16)',
+    aspect_ratio: '9:16',
+    width_px: 1080,
+    height_px: 1920,
+    format_type: 'DIGITAL_POSTER',
+    supported_themes: ['CINEMATIC_DARK', 'SAFFRON_WARRIOR', 'ROYAL_GOLD', 'MONOCHROME_HERITAGE'],
+  },
+  {
+    id: 'billboard-16-9',
+    name: 'Roadside Billboard & LED Masthead (16:9)',
+    aspect_ratio: '16:9',
+    width_px: 1920,
+    height_px: 1080,
+    format_type: 'BILLBOARD',
+    supported_themes: ['CINEMATIC_DARK', 'SAFFRON_WARRIOR', 'ROYAL_GOLD', 'MONOCHROME_HERITAGE'],
+  },
+  {
+    id: 'bus-shelter-4-3',
+    name: 'Bus Shelter & Kiosk Display (4:3)',
+    aspect_ratio: '4:3',
+    width_px: 1600,
+    height_px: 1200,
+    format_type: 'STREET_KIOSK',
+    supported_themes: ['CINEMATIC_DARK', 'SAFFRON_WARRIOR', 'ROYAL_GOLD', 'MONOCHROME_HERITAGE'],
+  },
+  {
+    id: 'notice-board-a3',
+    name: 'College Notice Board & Office Print (ISO A3)',
+    aspect_ratio: '1:1.414',
+    width_px: 1240,
+    height_px: 1754,
+    format_type: 'PRINT_A3',
+    supported_themes: ['CINEMATIC_DARK', 'SAFFRON_WARRIOR', 'ROYAL_GOLD', 'MONOCHROME_HERITAGE'],
+  },
+];
+
+export async function fetchBannerTemplates(): Promise<BannerTemplate[]> {
+  return SAMPLE_BANNER_TEMPLATES;
+}
+
+export async function fetchBannerTemplateById(id: string): Promise<BannerTemplate | null> {
+  return SAMPLE_BANNER_TEMPLATES.find((t) => t.id === id) || null;
+}
 
 // Fast In-Memory Hero Cache (Sub-1ms instant retrieval)
 const HERO_CACHE = new Map<string, Hero>();
