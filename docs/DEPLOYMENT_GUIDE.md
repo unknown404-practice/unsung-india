@@ -4,27 +4,9 @@ This guide provides complete instructions to deploy the **Unsung Heroes of India
 
 ---
 
-## 🚀 Option 1: 1-Click Vercel Deployment (Recommended for Frontend)
+## 🐳 1-Command Sovereign Docker Deployment (with Containerized Local Qwen 2.5)
 
-The Next.js 14 App Router frontend is 100% self-contained with built-in API routes (`/api/tts`, `/api/qwen/search`, `/api/submissions`, `/api/image-proxy`) and persistent local storage.
-
-### Steps:
-1. Push your repository to **GitHub / GitLab**.
-2. Go to [vercel.com](https://vercel.com) and click **"Add New Project"**.
-3. Import your repository and set the **Root Directory** to `frontend`.
-4. Leave framework preset as **Next.js**.
-5. Set Environment Variables:
-   ```env
-   NODE_ENV=production
-   NEXT_TELEMETRY_DISABLED=1
-   ```
-6. Click **Deploy**. Your app will be live with high-speed Mumbai/Singapore CDN nodes (`bom1`, `sin1`).
-
----
-
-## 🐳 Option 2: 1-Command Self-Hosted Docker Compose (with Containerized Local Qwen 2.5)
-
-Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud data centers. If Cloud AI keys are absent or exhausted, the system automatically falls back to the **local Qwen 2.5 container** inside Docker.
+The entire platform is 100% sovereign, offline-capable, and self-hosted with containerized local Qwen AI models and PostgreSQL.
 
 ### Architecture in Docker:
 - **`ollama`**: Containerized Ollama instance running Qwen 2.5 (`qwen2.5:7b` or `qwen2.5:14b`).
@@ -43,7 +25,7 @@ Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud
    cd unsung-heroes-india
    ```
 
-2. Create production environment configuration (optional API keys):
+2. Create environment configuration:
    ```bash
    cp .env.example .env
    ```
@@ -58,9 +40,9 @@ Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud
    docker compose ps
    ```
    * Frontend: `http://<your-server-ip>:3000`
-   * Backend API: `http://<your-server-ip>:8000/docs`
-   * Ollama Local AI: `http://<your-server-ip>:11434`
-   * PostgreSQL: `localhost:5432`
+   * Backend API: `http://<your-server-ip>:8001/docs`
+   * Ollama Local AI: `http://<your-server-ip>:11435`
+   * PostgreSQL: `localhost:5433`
 
 5. (Optional) Set up Nginx Reverse Proxy with SSL (Certbot):
    ```nginx
@@ -77,18 +59,6 @@ Ideal for deploying on AWS EC2, DigitalOcean, Hetzner, or Indian sovereign cloud
        }
    }
    ```
-
----
-
-## ☁️ Option 3: Full Stack Managed Cloud (Render / Railway)
-
-### Using Render Blueprint:
-1. Connect your repository to [Render.com](https://render.com).
-2. Click **"New +"** $\rightarrow$ **"Blueprint"**.
-3. Select `backend/render.yaml` to deploy:
-   - Managed PostgreSQL database.
-   - FastAPI backend container with automatic SSL and health checks.
-4. Deploy the frontend as a Next.js Web Service with `Root Directory: frontend`.
 
 ---
 

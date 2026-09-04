@@ -65,7 +65,7 @@ services:
       - DEBUG=false
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespassword}@postgres:5432/${POSTGRES_DB:-unsung_heroes}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-production_secret_key_change_in_env}
-      - ALLOWED_ORIGINS=["http://localhost:3000","https://unsungheroes.in","https://*.vercel.app"]
+      - ALLOWED_ORIGINS=["http://localhost:3000","https://unsungheroes.in"]
       - OLLAMA_API_URL=http://ollama:11434/api/generate
       - DEFAULT_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
     depends_on:
@@ -86,9 +86,6 @@ services:
       - NEXT_PUBLIC_API_BASE_URL=http://backend:8000/api/v1
       - OLLAMA_URL=http://ollama:11434/api/generate
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:7b}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY:-}
-      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
     depends_on:
       - backend
       - ollama
