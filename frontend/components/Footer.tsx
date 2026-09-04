@@ -25,8 +25,11 @@ export default function Footer() {
             <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-4">Platform</h4>
             <ul className="space-y-2.5 text-xs sm:text-sm">
               <li><Link href="/explore" className="hover:text-saffron-400 transition-colors">Explore All Heroes</Link></li>
+              <li><Link href="/map" className="hover:text-saffron-400 transition-colors">Geographic Heritage Map</Link></li>
+              <li><Link href="/timeline" className="hover:text-saffron-400 transition-colors">3,000-Year Timeline</Link></li>
               <li><Link href="/banners" className="hover:text-saffron-400 transition-colors">Banner Studio</Link></li>
               <li><Link href="/suggest" className="hover:text-saffron-400 transition-colors">Suggest a Local Hero</Link></li>
+              <li><Link href="/admin/submissions" className="hover:text-saffron-400 transition-colors">Moderation Desk</Link></li>
               <li><Link href="/about" className="hover:text-saffron-400 transition-colors">DPI Architecture & Specs</Link></li>
             </ul>
           </div>
