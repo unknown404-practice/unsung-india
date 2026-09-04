@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
                   : 'National Heritage & Public Service',
                 tagline: `Immortal pioneer and revolutionary from ${state}.`,
                 short_bio: cleanExtract,
-                image_url: img || 'https://upload.wikimedia.org/wikipedia/commons/4/44/Subhas_Chandra_Bose_NRB.jpg',
+                image_url: img || 'https://upload.wikimedia.org/wikipedia/commons/8/80/India_Emblem.svg',
                 is_unsung_reason: `Monumental contributions to the freedom and culture of ${state} and India.`,
                 image_license: 'PUBLIC_DOMAIN',
                 image_attribution: 'Wikimedia Commons / Public Domain',
