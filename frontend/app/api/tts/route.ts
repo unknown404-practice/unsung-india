@@ -6,7 +6,7 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     bn: 'পশ্চিমবঙ্গ',
     hi: 'पश्चिम बंगाल',
     ta: 'மேற்கு வங்காளம்',
-    te: 'పశ్ಚಿమ బెంగాల్',
+    te: 'పశ్చిమ బెంగాల్',
     mr: 'पश्चिम बंगाल',
     gu: 'પશ્ચિમ બંગાળ',
     kn: 'ಪಶ್ಚಿಮ ಬಂಗಾಳ',
@@ -27,7 +27,7 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     te: 'మహారాష్ట్ర',
     mr: 'महाराष्ट्र',
     gu: 'મહારાષ્ટ્ર',
-    kn: 'ಮಹಾರಾಷ್ಟ್ರ',
+    kn: 'મહારાષ્ટ્ર',
   },
   'Tamil Nadu': {
     bn: 'তামিলনাড়ু',
@@ -87,7 +87,7 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     bn: 'কর্ণাটক',
     hi: 'कर्नाटक',
     ta: 'கர்நாடகா',
-    te: 'కర్ణాటక',
+    te: 'కర్ణాಟಕ',
     mr: 'कर्नाटक',
     gu: 'કર્ણાટક',
     kn: 'ಕರ್ನಾಟಕ',
@@ -96,8 +96,8 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     bn: 'গুজরাট',
     hi: 'गुजरात',
     ta: 'குஜராத்',
-    te: 'గుజరాత్',
-    mr: 'गुजरात',
+    te: 'ગુજરાત',
+    mr: 'ગુજરાત',
     gu: 'ગુજરાત',
     kn: 'ಗುಜರಾತ್',
   },
@@ -105,61 +105,78 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
 
 function getLocalizedState(state: string, lang: string): string {
   for (const [key, mapping] of Object.entries(STATE_LOCALIZATIONS)) {
-    if (state.toLowerCase().includes(key.toLowerCase())) {
+    if (state && state.toLowerCase().includes(key.toLowerCase())) {
       return mapping[lang] || state;
     }
   }
-  return state;
+  return state || 'ভারত';
 }
 
-// Humanistic, warm, calm documentary tribute generator
-function craftHumanisticStoryTribute(
-  name: string,
-  nameLocal: string | null | undefined,
-  state: string,
-  domain: string,
-  tagline: string,
-  shortBio: string,
-  isUnsungReason: string,
-  lang: string
-): string {
-  const localState = getLocalizedState(state, lang);
-  const cleanTagline = tagline.replace(/^[“"]|[”"]$/g, '').trim();
+// Complete 5-Act Documentary Storytelling Builder across all 8 languages
+function buildCompleteOralStory(hero: any, lang: string): string {
+  const localState = getLocalizedState(hero.state, lang);
+  const cleanTagline = (hero.tagline || '').replace(/^[“"]|[”"]$/g, '').trim();
+  const shortBio = (hero.short_bio || '').trim();
+  const unsungReason = (hero.is_unsung_reason || '').trim();
 
-  // Pick appropriate script name
-  const heroName = (lang === 'bn' && nameLocal) ? nameLocal : (lang === 'hi' && nameLocal && /[\u0900-\u097F]/.test(nameLocal)) ? nameLocal : name;
+  // Pick best matched localized name
+  let heroName = hero.name;
+  if (lang === 'bn' && hero.name_local) heroName = hero.name_local;
+  else if (lang === 'hi' && hero.name_local && /[\u0900-\u097F]/.test(hero.name_local)) heroName = hero.name_local;
+
+  const contribsList = Array.isArray(hero.contributions) ? hero.contributions : [];
+  const contribsDesc = contribsList
+    .slice(0, 3)
+    .map((c: any) => `${c.title}: ${c.description}`)
+    .join('। ');
 
   switch (lang) {
     case 'bn':
-    case 'bn-IN':
-      return `আজ আমরা গভীর শ্রদ্ধার সাথে স্মরণ করছি ${heroName}-কে। ${localState}-র পুণ্যভূমিতে জন্ম নেওয়া এই মহান ব্যক্তিত্ব আমাদের শিখিয়ে গেছেন নিঃস্বার্থ ত্যাগ ও অদম্য সাহসের মূল্য। তাঁর সেই অমর বাণী—"${cleanTagline}"। মাতৃভূমির মুক্তি ও অগ্রগতির জন্য তাঁর এই চিরন্তন অবদান আমাদের হৃদয়ে চিরকাল দেশপ্রেমের আলো হয়ে বেঁচে থাকবে।`;
+    case 'bn-IN': {
+      const cPart = contribsDesc ? `তাঁদের জীবনের প্রধান ঐতিহাসিক কীর্তিগুলি ছিল—${contribsDesc}।` : '';
+      return `আজ আমরা গভীর শ্রদ্ধার সাথে স্মরণ করছি ভারতের এক মহান ব্যক্তিত্ব, ${heroName}-কে। ${localState}-র পুণ্যভূমিতে জন্ম নেওয়া এই অমর সন্তান আমাদের শিখিয়ে গেছেন নিঃস্বার্থ ত্যাগ ও অদম্য সাহসের মূল্য। তাঁর সেই কালজয়ী অমর আহ্বান ছিল—"${cleanTagline}"। জীবনের ঐতিহাসিক পটভূমি: ${shortBio} ${cPart} ঐতিহাসিক গুরুত্ব ও আত্মত্যাগ: ${unsungReason} মাতৃভূমির মুক্তি ও অগ্রগতির জন্য তাঁর এই চিরন্তন অবদান আমাদের হৃদয়ে চিরকাল দেশপ্রেমের আলো হয়ে বেঁচে থাকবে। আসুন আমরা শ্রদ্ধার সাথে তাঁর স্মৃতিকে স্যালুট জানাই। জয় হিন্দ!`;
+    }
 
     case 'hi':
-    case 'hi-IN':
-      return `आइए आज हम श्रद्धापूर्वक नमन करते हैं ${heroName} को। ${localState} की पावन धरा पर जन्मे इस महान व्यक्तित्व ने हमें राष्ट्र सेवा और असीम साहस की प्रेरणा दी। उनका अमर संदेश था—"${cleanTagline}"। मातृभूमि के लिए उनका यह अद्वितीय योगदान और बलिदान हमारी आने वाली पीढ़ियों को सदैव प्रेरित करता रहेगा।`;
+    case 'hi-IN': {
+      const cPart = contribsDesc ? `इनके प्रमुख ऐतिहासिक कार्य और उपलब्धियां थीं—${contribsDesc}।` : '';
+      return `आइए आज हम सब मिलकर श्रद्धापूर्वक स्मरण करते हैं भारत के महान गौरव, ${heroName} को। ${localState} की पावन धरा पर जन्मे इस महानायक ने हमें राष्ट्र सेवा और असीम साहस की प्रेरणा दी। इनका अमर जीवन संदेश था—"${cleanTagline}"। इनका जीवन परिचय और ऐतिहासिक यात्रा: ${shortBio} ${cPart} ऐतिहासिक महत्व और बलिदान: ${unsungReason} मातृभूमि के लिए इनका यह अद्वितीय योगदान हमारी आने वाली पीढ़ियों को सदैव प्रेरित करता रहेगा। आइए हम सब मिलकर इनके पावन योगदान को नमन करें। जय हिंद!`;
+    }
 
     case 'ta':
-    case 'ta-IN':
-      return `இன்று நாம் ஆழ்ந்த மரியாதையுடன் போற்றும் உன்னத தலைவர், ${heroName}. ${localState} மண்ணில் உதித்த இந்த மாமனிதர், நமக்கு சுயமரியாதையையும் தேச பக்தியையும் கற்றுத் தந்தார். "${cleanTagline}" என்பதே அவரது வாழ்வின் தாரக மந்திரம். இவரது இணையற்ற தியாகமும் அர்ப்பணிப்பும் இந்திய வரலாற்றில் என்றும் நிலைத்து நிற்கும்.`;
+    case 'ta-IN': {
+      const cPart = contribsDesc ? `இவரது முக்கிய வரலாற்று சாதனைகள்: ${contribsDesc}.` : '';
+      return `இன்று நாம் ஆழ்ந்த மரியாதையுடன் போற்றும் உன்னத தேசியத் தலைவர், ${heroName}. ${localState} மண்ணில் உதித்த இந்த மாமனிதர், நமக்கு சுயமரியாதையையும் தேச பக்தியையும் கற்றுத் தந்தார். "${cleanTagline}" என்பதே இவரது வாழ்வின் தாரக மந்திரமாகும். வரலாற்றுப் பின்னணி மற்றும் வாழ்க்கை நிகழ்வுகள்: ${shortBio} ${cPart} வரலாற்று முக்கியத்துவம் மற்றும் தியாகம்: ${unsungReason} தாய்நாட்டிற்காக இவர் ஆற்றிய இந்த ஒப்பற்ற சேவை இந்திய வரலாற்றில் என்றும் நிலைத்து நிற்கும். நாம் அனைவரும் இவரை வணங்கி போற்றுவோம். ஜெய் ஹிந்த்!`;
+    }
 
     case 'te':
-    case 'te-IN':
-      return `ఈ రోజు మనం ఎంతో గౌరవంతో స్మరించుకుంటున్న జాతీయ నాయకుడు ${heroName}. ${localState} పుణ్యభూమిలో జన్మించిన ఈ మహనీయుడు, మనందరికీ నిస్వార్థ సేవ మరియు ధైర్యాన్ని అందించారు. "${cleanTagline}" అనే ఆయన సందేశం ప్రతి హృదయాన్ని కదిలిస్తుంది. దేశ ప్రగతి కోసం ఆయన చేసిన త్యాగం చిరకాలం గుర్తుండిపోతుంది.`;
+    case 'te-IN': {
+      const cPart = contribsDesc ? `ఆయన సాధించిన ప్రధాన చారిత్రక విజయాలు: ${contribsDesc}.` : '';
+      return `ఈ రోజు మనం ఎంతో గౌరవంతో స్మరించుకుంటున్న జాతీయ నాయకుడు ${heroName}. ${localState} పుణ్యభూమిలో జన్మించిన ఈ మహనీయుడు, మనందరికీ నిస్వార్థ సేవ మరియు ధైర్యాన్ని అందించారు. "${cleanTagline}" అనే ఆయన సందేశం ప్రతి హృదయాన్ని కదిలిస్తుంది. జీవిత చరిత్ర మరియు పోరాట గాథ: ${shortBio} ${cPart} చారిత్రక ప్రాముఖ్యత మరియు త్యాగం: ${unsungReason} దేశ ప్రగతి కోసం ఆయన చేసిన త్యాగం చిరకాలం గుర్తుండిపోతుంది. ఆయనకు మన ఘన నివాళులు. జై హింద్!`;
+    }
 
     case 'mr':
-    case 'mr-IN':
-      return `आज आपण अत्यंत आदराने स्मरण करूया ${heroName} यांचे. ${localState} च्या पवित्र भूमीत जन्मलेल्या या थोर व्यक्तिमत्त्वाने आपल्याला राष्ट्रनिष्ठा आणि अथांग धैर्याचा मार्ग दाखवला. "${cleanTagline}" हा त्यांचा जीवनमंत्र होता. देशासाठी त्यांचे हे अमूल्य योगदान सदैव प्रेरणादायी राहील.`;
+    case 'mr-IN': {
+      const cPart = contribsDesc ? `त्यांचे प्रमुख ऐतिहासिक कार्य: ${contribsDesc}।` : '';
+      return `आज आपण अत्यंत आदराने स्मरण करूया भारताचे महान सुपुत्र, ${heroName} यांचे. ${localState} च्या पवित्र भूमीत जन्मलेल्या या थोर व्यक्तिमत्त्वाने आपल्याला राष्ट्रनिष्ठा आणि अथांग धैर्याचा मार्ग दाखवला. "${cleanTagline}" हा त्यांचा जीवनमंत्र होता. जीवनपट आणि ऐतिहासिक प्रवास: ${shortBio} ${cPart} ऐतिहासिक महत्त्व आणि बलिदान: ${unsungReason} देशासाठी त्यांचे हे अमूल्य योगदान सदैव प्रेरणादायी राहील. आपण सर्व मिळून त्यांना त्रिवार वंदन करूया. जय हिंद!`;
+    }
 
     case 'gu':
-    case 'gu-IN':
-      return `આજે આપણે હૃદયપૂર્વક વંદન કરીએ છીએ ${heroName}ને. ${localState} ની પવિત્ર ભૂમિમાં જન્મેલા આ મહાન સપૂતે આપણને નિઃસ્વાર્થ સેવા અને હિંમતનો સંદેશ આપ્યો. "${cleanTagline}" એ તેમનો જીવન મંત્ર હતો. દેશ માટેનું તેમનું આ બલિદાન સદાય અમર રહેશે.`;
+    case 'gu-IN': {
+      const cPart = contribsDesc ? `તેમના મુખ્ય ઐતિહાસિક યોગદાન: ${contribsDesc}.` : '';
+      return `આજે આપણે હૃદયપૂર્વક વંદન કરીએ છીએ ભારતના મહાન સપૂત, ${heroName}ને. ${localState} ની પવિત્ર ભૂમિમાં જન્મેલા આ મહાન વ્યક્તિએ આપણને નિઃસ્વાર્થ સેવા અને હિંમતનો સંદેશ આપ્યો. "${cleanTagline}" એ તેમનો જીવન મંત્ર હતો. જીવન પરિચય અને ઐતિહાસિક સફર: ${shortBio} ${cPart} ઐતિહાસિક મહત્વ અને બલિદાન: ${unsungReason} દેશ માટેનું તેમનું આ બલિદાન સદાય અમર રહેશે. ચાલો આપણે સૌ તેમને શ્રદ્ધાંજલિ અર્પીએ. જય હિન્દ!`;
+    }
 
     case 'kn':
-    case 'kn-IN':
-      return `ಇಂದು ನಾವು ಅತ್ಯಂತ ಗೌರವದಿಂದ ಸ್ಮರಿಸುತ್ತಿರುವ ಧೀಮಂತ ನಾಯಕ ${heroName}. ${localState} ನೆಲದಲ್ಲಿ ಜನಿಸಿದ ಈ ಮಹಾನ್ ಚೇತನ, ನಮಗೆ ತ್ಯಾಗ ಮತ್ತು ಸಾಹಸದ ಹೊಸ ದಾರಿಯನ್ನು ತೋರಿಸಿಕೊಟ್ಟರು. "${cleanTagline}" ಎಂಬುದು ಅವರ ಜೀವನ ಸಂದೇಶವಾಗಿತ್ತು. ದೇಶಕ್ಕಾಗಿ ಇವರ ಮಹಾನ್ ಸೇವೆ ಎಂದಿಗೂ ಅಜರಾಮರ.`;
+    case 'kn-IN': {
+      const cPart = contribsDesc ? `ಇವರ ಪ್ರಮುಖ ಐತಿಹಾಸಿಕ ಸಾಧನೆಗಳು: ${contribsDesc}.` : '';
+      return `ಇಂದು ನಾವು ಅತ್ಯಂತ ಗೌರವದಿಂದ ಸ್ಮರಿಸುತ್ತಿರುವ ಧೀಮಂತ ನಾಯಕ ${heroName}. ${localState} ನೆಲದಲ್ಲಿ ಜನಿಸಿದ ಈ ಮಹಾನ್ ಚೇತನ, ನಮಗೆ ತ್ಯಾಗ ಮತ್ತು ಸಾಹಸದ ಹೊಸ ದಾರಿಯನ್ನು ತೋರಿಸಿಕೊಟ್ಟರು. "${cleanTagline}" ಎಂಬುದು ಅವರ ಜೀವನ ಸಂದೇಶವಾಗಿತ್ತು. ಜೀವನ ಇತಿಹಾಸ ಮತ್ತು ಮಹಾ ಪಯಣ: ${shortBio} ${cPart} ಐತಿಹಾಸಿಕ ಮಹತ್ವ ಮತ್ತು ತ್ಯಾಗ: ${unsungReason} ದೇಶಕ್ಕಾಗಿ ಇವರ ಮಹಾನ್ ಸೇವೆ ಎಂದಿಗೂ ಅಜರಾಮರ. ಇವರಿಗೆ ನಮ್ಮ ಕೋಟಿ ಕೋಟಿ ನಮನಗಳು. ಜೈ ಹಿಂದ್!`;
+    }
 
-    default:
-      return `Today, we pause to honor the extraordinary journey of ${name}. Rising from ${state}, their life embodies selfless dedication and unwavering courage. Guided by the immortal vision that "${cleanTagline}", their pivotal contributions helped shape the destiny of our nation. Their monumental sacrifice continues to inspire generations of Indians.`;
+    default: {
+      const cPart = contribsDesc ? `Their pivotal milestones include: ${contribsDesc}.` : '';
+      return `Today, we pause to honor the extraordinary journey of ${hero.name}. Rising from ${hero.state}, their life embodies selfless dedication and unwavering courage. Guided by the vision that "${cleanTagline}", their pivotal contributions helped shape the destiny of our nation. Historical Narrative: ${shortBio} ${cPart} Significance and Enduring Legacy: ${unsungReason} Their monumental sacrifice continues to inspire millions across India. Jai Hind!`;
+    }
   }
 }
 
@@ -214,19 +231,10 @@ export async function POST(request: NextRequest) {
 
     const shortLang = lang.slice(0, 2).toLowerCase();
 
-    // Generate Warm, Poetic Documentary Oral Tribute (< 2ms)
-    const spokenText = craftHumanisticStoryTribute(
-      hero.name,
-      hero.name_local,
-      hero.state,
-      hero.primary_domain,
-      hero.tagline,
-      hero.short_bio,
-      hero.is_unsung_reason,
-      shortLang
-    );
+    // Generate Full Complete 5-Act Documentary Story
+    const spokenText = buildCompleteOralStory(hero, shortLang);
 
-    // Split text into natural, calm spoken clauses (under 180 chars each)
+    // Split text into natural spoken sentences (respecting Indic punctuation । and . ? !)
     const sentences = spokenText
       .split(/(?<=[।\.!\?])\s+/)
       .map((s) => s.trim())
