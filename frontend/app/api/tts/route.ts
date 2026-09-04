@@ -258,7 +258,7 @@ function getLocalizedState(state: string, lang: string): string {
 }
 
 // Domain-Faithful, Fact-Accurate Pure Story Synthesizer
-export function buildDomainFaithfulStory(hero: any, lang: string): string {
+function buildDomainFaithfulStory(hero: any, lang: string): string {
   const localState = getLocalizedState(hero.state, lang);
   const heroName =
     lang === 'bn' && hero.name_local
