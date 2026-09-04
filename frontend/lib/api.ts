@@ -17,17 +17,57 @@ export function proxyImageUrl(url: string | null | undefined): string {
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
 }
 
+export interface FetchHeroesOptions {
+  q?: string;
+  query?: string;
+  state?: string;
+  domain?: string;
+  era?: string;
+  unsung_level?: string;
+  page?: number;
+  limit?: number;
+  useQwenTurbo?: boolean;
+}
+
 export async function fetchHeroes(
-  query: string = '',
-  state: string = '',
-  domain: string = '',
-  era: string = '',
-  unsung_level: string = '',
-  page: number = 1,
-  limit: number = 20
+  queryOrOptions: string | FetchHeroesOptions = '',
+  stateArg: string = '',
+  domainArg: string = '',
+  eraArg: string = '',
+  unsungLevelArg: string = '',
+  pageArg: number = 1,
+  limitArg: number = 20
 ): Promise<SearchResponse> {
+  let rawQuery = '';
+  let state = '';
+  let domain = '';
+  let era = '';
+  let unsung_level = '';
+  let page = 1;
+  let limit = 20;
+
+  if (typeof queryOrOptions === 'object' && queryOrOptions !== null) {
+    rawQuery = queryOrOptions.q || queryOrOptions.query || '';
+    state = queryOrOptions.state && queryOrOptions.state !== 'All States' ? queryOrOptions.state : '';
+    domain = queryOrOptions.domain && queryOrOptions.domain !== 'All Domains' ? queryOrOptions.domain : '';
+    era = queryOrOptions.era || '';
+    unsung_level = queryOrOptions.unsung_level || '';
+    page = queryOrOptions.page || 1;
+    limit = queryOrOptions.limit || 20;
+  } else {
+    rawQuery = typeof queryOrOptions === 'string' ? queryOrOptions : String(queryOrOptions || '');
+    state = stateArg && stateArg !== 'All States' ? stateArg : '';
+    domain = domainArg && domainArg !== 'All Domains' ? domainArg : '';
+    era = eraArg || '';
+    unsung_level = unsungLevelArg || '';
+    page = pageArg || 1;
+    limit = limitArg || 20;
+  }
+
+  const q = rawQuery.toLowerCase().trim();
+
   // If no search filter, return catalog
-  if (!query && !state && !domain && !era && !unsung_level) {
+  if (!q && !state && !domain && !era && !unsung_level) {
     const startIndex = (page - 1) * limit;
     const paginated = SAMPLE_HEROES.slice(startIndex, startIndex + limit);
     return {
@@ -39,7 +79,6 @@ export async function fetchHeroes(
   }
 
   // 1. Local catalog filtering
-  const q = query.toLowerCase().trim();
   const localFiltered = SAMPLE_HEROES.filter((h) => {
     const matchQuery =
       !q ||
@@ -50,7 +89,7 @@ export async function fetchHeroes(
       h.short_bio.toLowerCase().includes(q) ||
       h.tagline.toLowerCase().includes(q);
 
-    const matchState = !state || h.state.toLowerCase() === state.toLowerCase();
+    const matchState = !state || h.state.toLowerCase().includes(state.toLowerCase());
     const matchDomain = !domain || h.primary_domain.toLowerCase().includes(domain.toLowerCase());
     const matchEra = !era || h.era.toLowerCase().includes(era.toLowerCase());
     const matchUnsung = !unsung_level || h.unsung_level === unsung_level;
