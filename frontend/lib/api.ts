@@ -145,16 +145,13 @@ export async function fetchHeroes(
     };
   }
 
-  // 1. Local catalog filtering
+  // 1. Local catalog filtering (Strict name/alias match)
   const localFiltered = allHeroes.filter((h) => {
     const matchQuery =
       !q ||
       h.name.toLowerCase().includes(q) ||
-      (h.name_local && h.name_local.includes(q)) ||
-      h.state.toLowerCase().includes(q) ||
-      h.primary_domain.toLowerCase().includes(q) ||
-      h.short_bio.toLowerCase().includes(q) ||
-      h.tagline.toLowerCase().includes(q);
+      (h.name_local && h.name_local.toLowerCase().includes(q)) ||
+      h.slug.toLowerCase().includes(q);
 
     const matchState = !state || h.state.toLowerCase().includes(state.toLowerCase());
     const matchDomain = !domain || h.primary_domain.toLowerCase().includes(domain.toLowerCase());
@@ -232,94 +229,66 @@ export async function fetchHeroBySlug(slug: string): Promise<Hero | null> {
   let wikiImage = '';
   let wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(rawSearch.replace(/\s+/g, '_'))}`;
 
-  // 2. High-Speed Concurrent Wikipedia Pipeline (Direct + Generator in parallel)
+  // 2. High-Speed Concurrent Wikipedia Pipeline (Rank-1 Search + Leads)
   try {
-    const directUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
       rawSearch
+    )}&srlimit=1&format=json`;
+    const sRes = await fetch(searchUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } });
+    if (sRes.ok) {
+      const sData = await sRes.json();
+      const hits = sData?.query?.search || [];
+      if (hits.length > 0 && hits[0].title) {
+        wikiTitle = hits[0].title;
+      }
+    }
+
+    const targetTitle = wikiTitle || rawSearch;
+
+    const detailUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+      targetTitle
     )}&redirects=1&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=1000&inprop=url&format=json`;
-
-    const genUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
-      `"${rawSearch}"`
-    )}&gsrlimit=3&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=1000&inprop=url&format=json`;
-
-    const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
-      rawSearch
-    )}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json`;
-
-    // Fire all 3 in parallel with 2.5s timeout
-    const [dRes, gRes, cRes] = await Promise.allSettled([
-      fetch(directUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } }),
-      fetch(genUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } }),
-      fetch(commonsUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } }),
-    ]);
-
-    // Parse Direct Results
-    if (dRes.status === 'fulfilled' && dRes.value.ok) {
-      const dJson = await dRes.value.json();
+    const dRes = await fetch(detailUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } });
+    if (dRes.ok) {
+      const dJson = await dRes.json();
       const pages = dJson?.query?.pages || {};
       for (const pid in pages) {
         if (pid !== '-1') {
           const p = pages[pid];
-          const ext = p.extract || '';
-          if (ext && !ext.toLowerCase().includes('may refer to:')) {
-            wikiTitle = p.title || rawSearch;
-            wikiExtract = ext;
-            const cImg = p.original?.source || p.thumbnail?.source || '';
-            if (cImg && !cImg.toLowerCase().includes('disambig')) {
-              wikiImage = cImg.split('?')[0];
-            }
-            wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiTitle.replace(/\s+/g, '_'))}`;
+          wikiTitle = p.title || targetTitle;
+          wikiExtract = p.extract || '';
+          const cImg = p.original?.source || p.thumbnail?.source || '';
+          if (cImg && !cImg.toLowerCase().includes('disambig')) {
+            wikiImage = cImg.split('?')[0];
           }
+          wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiTitle.replace(/\s+/g, '_'))}`;
         }
       }
     }
 
-    // Parse Generator Results if needed
-    if ((!wikiExtract || !wikiImage) && gRes.status === 'fulfilled' && gRes.value.ok) {
-      const gJson = await gRes.value.json();
-      const pages = gJson?.query?.pages || {};
-      for (const pid in pages) {
-        if (pid !== '-1') {
-          const p = pages[pid];
-          const pTitle = p.title || '';
-          const searchFirstWord = rawSearch.toLowerCase().split(' ')[0];
-          const searchLastWord = rawSearch.toLowerCase().split(' ').slice(-1)[0];
-          const titleLower = pTitle.toLowerCase();
-
-          if (titleLower.includes(searchFirstWord) || titleLower.includes(searchLastWord)) {
-            const ext = p.extract || '';
-            const img = p.original?.source || p.thumbnail?.source || '';
-            if (ext && !ext.toLowerCase().includes('may refer to:')) {
-              if (!wikiExtract) wikiExtract = ext;
-              if (img && !img.toLowerCase().includes('disambig') && !wikiImage) {
-                wikiImage = img.split('?')[0];
-                wikiTitle = pTitle;
-                wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(pTitle.replace(/\s+/g, '_'))}`;
-                break;
-              }
+    // Commons fallback if image missing
+    if (!wikiImage) {
+      const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
+        targetTitle
+      )}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json`;
+      const cRes = await fetch(commonsUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } });
+      if (cRes.ok) {
+        const cJson = await cRes.json();
+        const cPages = cJson?.query?.pages || {};
+        for (const cPid in cPages) {
+          const title = (cPages[cPid]?.title || '').toLowerCase();
+          const imgInfo = cPages[cPid]?.imageinfo;
+          if (imgInfo && imgInfo.length > 0 && imgInfo[0].url) {
+            const candidateUrl = imgInfo[0].url;
+            if (
+              /\.(jpg|jpeg|png|webp)$/i.test(candidateUrl) &&
+              !title.includes('grave') &&
+              !title.includes('pdf') &&
+              !title.includes('disambig')
+            ) {
+              wikiImage = candidateUrl.split('?')[0];
+              break;
             }
-          }
-        }
-      }
-    }
-
-    // Parse Commons Images if image still missing
-    if (!wikiImage && cRes.status === 'fulfilled' && cRes.value.ok) {
-      const cJson = await cRes.value.json();
-      const cPages = cJson?.query?.pages || {};
-      for (const cPid in cPages) {
-        const title = (cPages[cPid]?.title || '').toLowerCase();
-        const imgInfo = cPages[cPid]?.imageinfo;
-        if (imgInfo && imgInfo.length > 0 && imgInfo[0].url) {
-          const candidateUrl = imgInfo[0].url;
-          if (
-            /\.(jpg|jpeg|png|webp)$/i.test(candidateUrl) &&
-            !title.includes('grave') &&
-            !title.includes('pdf') &&
-            !title.includes('disambig')
-          ) {
-            wikiImage = candidateUrl.split('?')[0];
-            break;
           }
         }
       }
@@ -403,7 +372,7 @@ export async function fetchHeroBySlug(slug: string): Promise<Hero | null> {
     primary_domain: domain,
     tagline: `An immortal contributor to India's ${domain.toLowerCase()}.`,
     short_bio: cleanExtract,
-    image_url: wikiImage || 'https://upload.wikimedia.org/wikipedia/commons/4/44/Subhas_Chandra_Bose_NRB.jpg',
+    image_url: wikiImage || 'https://upload.wikimedia.org/wikipedia/commons/8/80/India_Emblem.svg',
     source_attribution: wikiUrl,
     unsung_level: 'Legendary',
     contributions: [

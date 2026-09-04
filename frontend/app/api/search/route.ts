@@ -121,22 +121,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(SEARCH_GET_CACHE.get(q));
   }
 
-  // 1. Check Built-In Knowledge Base with intelligent alias matching
+  // 1. Check Built-In Knowledge Base with exact & high-confidence alias matching
   for (const [key, hero] of Object.entries(NATIONAL_HERO_KB)) {
-    const keyTerms = key.split(' ');
-    const queryTerms = q.split(' ');
     const isMatch =
-      key.includes(q) ||
-      q.includes(key) ||
-      keyTerms.some((t) => q.includes(t) && t.length > 3) ||
-      (q.includes('bankim') && key.includes('bankim')) ||
-      (q.includes('netaji') && key.includes('subhas')) ||
-      (q.includes('bose') && key.includes('subhas')) ||
-      (q.includes('gandhi') && key.includes('gandhi')) ||
-      (q.includes('kalam') && key.includes('kalam')) ||
-      (q.includes('ambedkar') && key.includes('ambedkar')) ||
-      (q.includes('patel') && key.includes('patel')) ||
-      (q.includes('bhagat') && key.includes('bhagat'));
+      q === key ||
+      q === hero.name?.toLowerCase() ||
+      (q === 'netaji' && key === 'subhas chandra bose') ||
+      (q === 'bapu' && key === 'mahatma gandhi') ||
+      (q === 'father of the nation' && key === 'mahatma gandhi') ||
+      (q === 'shaheed bhagat singh' && key === 'bhagat singh');
 
     if (isMatch) {
       const slug = (hero.name || key)
@@ -179,59 +172,44 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 2. Free Wikipedia Action API Multi-Pass Lookup
+  // 2. High-Precision Free Wikipedia Action API Lookup
+  const userAgent = 'UnsungIndiaSearch/2.0 (https://unsung-heroes.gov.in; contact@unsung-heroes.gov.in)';
   try {
     let wikiTitle = '';
     let wikiExtract = '';
     let wikiImage = '';
     let wikiUrl = '';
 
-    const directUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+    // Step A: Rank-1 search
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
       q
-    )}&redirects=1&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=800&inprop=url&format=json`;
+    )}&srlimit=1&format=json`;
+    const sRes = await fetch(searchUrl, { headers: { 'User-Agent': userAgent } });
+    if (sRes.ok) {
+      const sJson = await sRes.json();
+      const hits = sJson?.query?.search;
+      if (hits && hits.length > 0) {
+        wikiTitle = hits[0].title;
+      }
+    }
 
-    const dRes = await fetch(directUrl, { headers: { 'User-Agent': 'UnsungIndiaDPI/1.0' } });
+    const targetTitle = wikiTitle || q;
+
+    // Step B: Details & Lead Portrait
+    const detailUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+      targetTitle
+    )}&redirects=1&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=1000&inprop=url&format=json`;
+    const dRes = await fetch(detailUrl, { headers: { 'User-Agent': userAgent } });
     if (dRes.ok) {
       const dJson = await dRes.json();
       const pages = dJson?.query?.pages || {};
       for (const pid in pages) {
         if (pid !== '-1') {
           const p = pages[pid];
-          wikiTitle = p.title || q;
+          wikiTitle = p.title || targetTitle;
           wikiExtract = p.extract || '';
           wikiImage = p.original?.source || p.thumbnail?.source || '';
           wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiTitle)}`;
-        }
-      }
-    }
-
-    if (!wikiTitle) {
-      const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-        `"${q}" India`
-      )}&srlimit=1&format=json`;
-      const sRes = await fetch(searchUrl, { headers: { 'User-Agent': 'UnsungIndiaDPI/1.0' } });
-      if (sRes.ok) {
-        const sJson = await sRes.json();
-        const hits = sJson?.query?.search;
-        if (hits && hits.length > 0) {
-          const hitTitle = hits[0].title;
-          const hitDetailUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
-            hitTitle
-          )}&redirects=1&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=800&inprop=url&format=json`;
-          const hdRes = await fetch(hitDetailUrl, { headers: { 'User-Agent': 'UnsungIndiaDPI/1.0' } });
-          if (hdRes.ok) {
-            const hdJson = await hdRes.json();
-            const hPages = hdJson?.query?.pages || {};
-            for (const pid in hPages) {
-              if (pid !== '-1') {
-                const p = hPages[pid];
-                wikiTitle = p.title;
-                wikiExtract = p.extract || '';
-                wikiImage = p.original?.source || p.thumbnail?.source || '';
-                wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiTitle)}`;
-              }
-            }
-          }
         }
       }
     }
