@@ -40,9 +40,11 @@ export interface Hero {
   short_bio: string;
   is_unsung_reason: string;
   image_url: string;
-  image_license: string;
-  image_attribution: string;
+  image_license?: string;
+  image_attribution?: string;
   image_source_page_url?: string;
+  source_attribution?: string;
+  unsung_level?: string;
   view_count?: number;
   banner_download_count?: number;
   contributions?: Contribution[];
@@ -58,4 +60,16 @@ export interface BannerTemplate {
   height_px: number;
   format_type: string;
   supported_themes: string[];
+}
+
+export interface SearchResponse {
+  data: Hero[];
+  items?: Hero[];
+  total: number;
+  page?: number;
+  limit?: number;
+  page_size?: number;
+  source?: string;
+  durationMs?: number;
+  duration_ms?: number;
 }

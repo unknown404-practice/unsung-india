@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { fetchHeroes } from '../../lib/api';
 import { Hero } from '../../lib/types';
@@ -36,6 +36,14 @@ const DOMAINS = [
 ];
 
 export default function ExplorePage() {
+  return (
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-16 text-center text-slate-400">Loading catalog...</div>}>
+      <ExploreContent />
+    </Suspense>
+  );
+}
+
+function ExploreContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
 

@@ -158,8 +158,8 @@ export async function fetchHeroes(
 
     const matchState = !state || h.state.toLowerCase().includes(state.toLowerCase());
     const matchDomain = !domain || h.primary_domain.toLowerCase().includes(domain.toLowerCase());
-    const matchEra = !era || h.era.toLowerCase().includes(era.toLowerCase());
-    const matchUnsung = !unsung_level || h.unsung_level === unsung_level;
+    const matchEra = !era || (h.era ? h.era.toLowerCase().includes(era.toLowerCase()) : false);
+    const matchUnsung = !unsung_level || ((h as any).unsung_level === unsung_level);
 
     return matchQuery && matchState && matchDomain && matchEra && matchUnsung;
   });
