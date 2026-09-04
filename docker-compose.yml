@@ -11,9 +11,12 @@ services:
     volumes:
       - ollama_models:/root/.ollama
     environment:
-      - OLLAMA_KEEP_ALIVE=24h
+      OLLAMA_KEEP_ALIVE: "24h"
+      OLLAMA_NUM_PARALLEL: "2"
+      OLLAMA_FLASH_ATTENTION: "true"
+      OLLAMA_IGPU_ENABLE: "1"
 
-  # 2. Automated Model Puller (Pulls Qwen 2.5 automatically on container startup)
+  # 2. Automated Model Puller (Pulls Qwen 2.5 turbo automatically on container startup)
   ollama-pull:
     image: curlimages/curl:latest
     container_name: unsung_heroes_ollama_pull
@@ -26,9 +29,11 @@ services:
         while ! curl -s http://ollama:11434/api/tags > /dev/null; do
           sleep 2;
         done;
-        echo 'Ollama is online. Pulling Qwen 2.5 model (${OLLAMA_MODEL:-qwen2.5:7b})...';
+        echo 'Ollama is online. Pulling turbo Qwen 2.5 1.5b model...';
+        curl -s -X POST http://ollama:11434/api/pull -d '{\"name\": \"qwen2.5:1.5b\"}';
+        echo 'Pulling standard Qwen 2.5 model (${OLLAMA_MODEL:-qwen2.5:7b})...';
         curl -s -X POST http://ollama:11434/api/pull -d '{\"name\": \"${OLLAMA_MODEL:-qwen2.5:7b}\"}';
-        echo 'Qwen 2.5 model successfully provisioned inside Docker!';
+        echo 'Qwen 2.5 models successfully provisioned inside Docker!';
       "
 
   # 3. PostgreSQL Database

@@ -11,7 +11,7 @@ logger = logging.getLogger("qwen_extractor")
 logger.setLevel(logging.INFO)
 
 OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://127.0.0.1:11434/api/generate")
-DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "qwen2.5:14b")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "qwen2.5:1.5b")
 
 
 class ExtractedPersonSchema(BaseModel):
@@ -83,7 +83,7 @@ async def extract_person_details(
     timeout_seconds: float = 180.0,
 ) -> Optional[Dict[str, Any]]:
     """
-    Executes local inference with Qwen2.5-14B via Ollama.
+    Executes local inference with Qwen2.5 via Ollama.
     Designed for asynchronous background ingestion jobs.
     """
     prompt = build_qwen_prompt(raw_wiki_text)
@@ -93,10 +93,14 @@ async def extract_person_details(
         "prompt": prompt,
         "stream": False,
         "format": "json",
+        "keep_alive": "24h",
         "options": {
             "temperature": 0.1,   # Ultra-low temperature for factual fidelity
             "top_p": 0.85,
-            "num_ctx": 4096,      # Context window sized for full infobox + lead section
+            "top_k": 20,
+            "num_ctx": 1024,      # Optimized context window
+            "num_predict": 220,   # Stop generation once JSON is complete
+            "num_thread": 8,
             "repeat_penalty": 1.1,
         },
     }

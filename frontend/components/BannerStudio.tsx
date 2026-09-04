@@ -27,19 +27,28 @@ import { proxyImageUrl } from '../lib/api';
 interface BannerStudioProps {
   heroes: Hero[];
   initialHeroSlug?: string;
+  initialHero?: Hero | null;
   templates: BannerTemplate[];
 }
 
 export default function BannerStudio({
   heroes,
   initialHeroSlug,
+  initialHero,
   templates,
 }: BannerStudioProps) {
+  const resolvedHero =
+    initialHero ||
+    (initialHeroSlug
+      ? heroes.find((h) => h.slug.toLowerCase() === initialHeroSlug.toLowerCase())
+      : null) ||
+    heroes[0];
+
   const [selectedHeroSlug, setSelectedHeroSlug] = useState<string>(
-    initialHeroSlug || heroes[0]?.slug || ''
+    resolvedHero?.slug || initialHeroSlug || heroes[0]?.slug || ''
   );
   const [currentHero, setCurrentHero] = useState<Hero>(
-    heroes.find((h) => h.slug === initialHeroSlug) || heroes[0]
+    resolvedHero || heroes[0]
   );
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
     templates[0]?.id || 'metro-pillar-9-16'
@@ -51,7 +60,7 @@ export default function BannerStudio({
   // Studio Modes: 'search' | 'upload' | 'catalog'
   const [activeMode, setActiveMode] = useState<'search' | 'upload' | 'catalog'>('search');
   const [aiSearchInput, setAiSearchInput] = useState(
-    initialHeroSlug ? initialHeroSlug.replace(/-/g, ' ') : ''
+    resolvedHero?.name || (initialHeroSlug ? initialHeroSlug.replace(/-/g, ' ') : '')
   );
   const [isAiSearching, setIsAiSearching] = useState(false);
 
@@ -72,12 +81,20 @@ export default function BannerStudio({
 
   const bannerCanvasRef = useRef<HTMLDivElement>(null);
 
-  // Auto-fetch if slug is provided
+  // Auto-fetch if slug is provided and not already resolved
   useEffect(() => {
+    if (initialHero) {
+      setCurrentHero(initialHero);
+      setSelectedHeroSlug(initialHero.slug);
+      setAiSearchInput(initialHero.name);
+      return;
+    }
     if (initialHeroSlug) {
       const match = heroes.find((h) => h.slug.toLowerCase() === initialHeroSlug.toLowerCase());
       if (match) {
         setCurrentHero(match);
+        setSelectedHeroSlug(match.slug);
+        setAiSearchInput(match.name);
       } else {
         fetch('/api/qwen/search', {
           method: 'POST',
@@ -86,12 +103,16 @@ export default function BannerStudio({
         })
           .then((res) => res.json())
           .then((data) => {
-            if (data.hero) setCurrentHero(data.hero);
+            if (data.hero) {
+              setCurrentHero(data.hero);
+              setSelectedHeroSlug(data.hero.slug);
+              setAiSearchInput(data.hero.name);
+            }
           })
           .catch(console.error);
       }
     }
-  }, [initialHeroSlug, heroes]);
+  }, [initialHeroSlug, initialHero, heroes]);
 
   // Determine active raw image URL
   const isUploadMode = activeMode === 'upload';

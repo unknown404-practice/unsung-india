@@ -1,14 +1,18 @@
-import { fetchHeroes, fetchBannerTemplates } from '../../lib/api';
+import { fetchHeroes, fetchBannerTemplates, fetchHeroBySlug } from '../../lib/api';
 import BannerStudio from '../../components/BannerStudio';
-import { Sparkles, Layers, ShieldCheck } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export default async function BannersPage({
   searchParams,
 }: {
   searchParams: { hero?: string };
 }) {
-  const { data: heroes } = await fetchHeroes();
-  const templates = await fetchBannerTemplates();
+  const heroQuery = searchParams?.hero;
+  const [{ data: heroes }, templates, initialHero] = await Promise.all([
+    fetchHeroes(),
+    fetchBannerTemplates(),
+    heroQuery ? fetchHeroBySlug(heroQuery) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
@@ -29,7 +33,8 @@ export default async function BannersPage({
       {/* Interactive Banner Studio */}
       <BannerStudio
         heroes={heroes}
-        initialHeroSlug={searchParams.hero}
+        initialHeroSlug={heroQuery}
+        initialHero={initialHero}
         templates={templates}
       />
     </div>

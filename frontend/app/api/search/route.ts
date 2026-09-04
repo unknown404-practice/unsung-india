@@ -105,12 +105,20 @@ const NATIONAL_HERO_KB: Record<string, Partial<DiscoveredHero>> = {
   }
 };
 
+// In-Memory Search Cache (< 1ms instant retrieval)
+const SEARCH_GET_CACHE = new Map<string, any>();
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get('q')?.toLowerCase().trim() || '';
 
   if (!q || q.length < 2) {
     return NextResponse.json({ data: [], total: 0 });
+  }
+
+  // 0. Check in-memory cache (< 1ms)
+  if (SEARCH_GET_CACHE.has(q)) {
+    return NextResponse.json(SEARCH_GET_CACHE.get(q));
   }
 
   // 1. Check Built-In Knowledge Base with intelligent alias matching
@@ -165,7 +173,9 @@ export async function GET(request: NextRequest) {
           },
         ],
       };
-      return NextResponse.json({ data: [fullHero], total: 1, source: 'KNOWLEDGE_ENGINE_VERIFIED' });
+      const payload = { data: [fullHero], total: 1, source: 'KNOWLEDGE_ENGINE_VERIFIED' };
+      SEARCH_GET_CACHE.set(q, payload);
+      return NextResponse.json(payload);
     }
   }
 
@@ -276,15 +286,19 @@ export async function GET(request: NextRequest) {
         ],
       };
 
-      return NextResponse.json({
+      const wikiPayload = {
         data: [liveHero],
         total: 1,
         source: 'FREE_WIKIPEDIA_API_DISCOVERY',
-      });
+      };
+      SEARCH_GET_CACHE.set(q, wikiPayload);
+      return NextResponse.json(wikiPayload);
     }
   } catch (err) {
     console.error('Server side discovery error:', err);
   }
 
-  return NextResponse.json({ data: [], total: 0, source: 'NO_MATCH' });
+  const emptyPayload = { data: [], total: 0, source: 'NO_MATCH' };
+  SEARCH_GET_CACHE.set(q, emptyPayload);
+  return NextResponse.json(emptyPayload);
 }

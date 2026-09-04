@@ -1,3 +1,6 @@
+// Global In-Memory Synthesis Cache (< 1ms instant retrieval for repeated queries)
+const SYNTHESIS_CACHE = new Map<string, HistoricalSynthesisResult>();
+
 export interface HistoricalSynthesisResult {
   tagline: string;
   unsung_reason: string;
@@ -13,12 +16,18 @@ export async function generateHistoricalSynthesis(params: {
 }): Promise<HistoricalSynthesisResult | null> {
   const { name, state, domain, bio } = params;
 
+  // 1. Instant Cache Return (< 1ms)
+  const cacheKey = `${name.toLowerCase().trim()}|${state.toLowerCase().trim()}|${domain.toLowerCase().trim()}`;
+  if (SYNTHESIS_CACHE.has(cacheKey)) {
+    return SYNTHESIS_CACHE.get(cacheKey)!;
+  }
+
   const systemPrompt =
     'You are a premier Indic historian and cultural scholar for the Digital Public Infrastructure of India. Return VALID JSON ONLY with exact keys: "tagline" (string: 1-line inspiring impact statement), "unsung_reason" (string: 1-2 sentence why their monumental legacy was overlooked or historical significance), and "contributions" (array of 2-3 objects with "title" and "description").';
 
   const userPrompt = `Hero/Contributor: ${name}\nState/Region: ${state}\nPrimary Domain: ${domain}\nBiographical Narrative: ${bio}\n\nSynthesize authentic domain-specific historical profile in JSON.`;
 
-  // 1. Containerized or Host Local Ollama Model (Docker or Host Windows Ollama)
+  // 2. Containerized or Host Local Ollama Model (Docker or Host Windows Ollama)
   const configuredUrl = process.env.OLLAMA_URL;
   const endpointCandidates = Array.from(
     new Set(
@@ -33,8 +42,18 @@ export async function generateHistoricalSynthesis(params: {
     )
   );
 
-  const preferredModel = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
-  const candidateModels = [preferredModel, 'qwen2.5:14b', 'qwen2.5:1.5b', 'qwen2.5:3b', 'qwen2.5:latest', 'llama3.1:8b', 'gemma:2b'];
+  // Prioritize ultra-fast 1.5b and 3b turbo models for sub-second CPU inference
+  const preferredModel = process.env.OLLAMA_MODEL;
+  const candidateModels = [
+    ...(preferredModel ? [preferredModel] : []),
+    'qwen2.5:1.5b',
+    'qwen2.5:3b',
+    'qwen2.5:7b',
+    'qwen2.5:14b',
+    'qwen2.5:latest',
+    'llama3.1:8b',
+    'gemma:2b',
+  ];
   const uniqueModels = Array.from(new Set(candidateModels));
 
   for (const ollamaUrl of endpointCandidates) {
@@ -48,22 +67,33 @@ export async function generateHistoricalSynthesis(params: {
             prompt: `${systemPrompt}\n\n${userPrompt}`,
             stream: false,
             format: 'json',
+            keep_alive: '24h',
             options: {
-              temperature: 0.2,
-              top_p: 0.85,
-              num_ctx: 4096,
+              temperature: 0.1,
+              top_k: 20,
+              top_p: 0.8,
+              num_ctx: 1024,
+              num_predict: 220,
+              num_thread: 8,
             },
           }),
-          signal: AbortSignal.timeout(20000),
+          signal: AbortSignal.timeout(3500),
         });
 
         if (res.ok) {
           const json = await res.json();
           const parsed = parseJsonResponse(json.response);
-          if (parsed) return { ...parsed, provider: `LOCAL_OLLAMA_${model.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` };
+          if (parsed) {
+            const result: HistoricalSynthesisResult = {
+              ...parsed,
+              provider: `LOCAL_OLLAMA_${model.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`,
+            };
+            SYNTHESIS_CACHE.set(cacheKey, result);
+            return result;
+          }
         }
       } catch {
-        // Try next model or endpoint
+        // Try next model or endpoint within fast timeout window
       }
     }
   }
@@ -108,3 +138,4 @@ function parseJsonResponse(raw: string | undefined): {
   }
   return null;
 }
+
