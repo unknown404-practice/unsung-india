@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, MapPin, ArrowRight, User } from 'lucide-react';
+import { Sparkles, MapPin, ArrowRight, User, Volume2, Square } from 'lucide-react';
 import { Hero } from '../lib/types';
 import { proxyImageUrl } from '../lib/api';
 
@@ -12,11 +12,37 @@ interface HeroCardProps {
 
 export default function HeroCard({ hero }: HeroCardProps) {
   const [imgError, setImgError] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
   const lifespan =
     hero.birth_year && hero.death_year
       ? `${hero.birth_year} – ${hero.death_year}`
       : hero.era || 'Historical Era';
+
+  const handleQuickAudio = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    if (isPlayingAudio) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const text = `${hero.name} from ${hero.state}. ${hero.tagline}`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.lang = 'en-IN';
+
+    utterance.onstart = () => setIsPlayingAudio(true);
+    utterance.onend = () => setIsPlayingAudio(false);
+    utterance.onerror = () => setIsPlayingAudio(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
 
   return (
     <div className="group relative rounded-2xl bg-glass-card overflow-hidden transition-all duration-500 hover:-translate-y-1.5 flex flex-col justify-between border border-white/10 shadow-xl">
@@ -50,9 +76,23 @@ export default function HeroCard({ hero }: HeroCardProps) {
               <MapPin className="w-3 h-3" />
               {hero.state}
             </span>
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-950/85 backdrop-blur-md text-slate-300 border border-white/10 shadow-md">
-              {hero.primary_domain}
-            </span>
+
+            {/* Quick Audio Preview Button */}
+            <button
+              onClick={handleQuickAudio}
+              className={`p-1.5 rounded-full backdrop-blur-md border transition-all shadow-md flex items-center gap-1 ${
+                isPlayingAudio
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 animate-pulse'
+                  : 'bg-slate-950/85 text-slate-300 border-white/10 hover:text-saffron-400 hover:border-saffron-500/40'
+              }`}
+              title={isPlayingAudio ? 'Stop Audio' : 'Listen to 5s Audio Summary'}
+            >
+              {isPlayingAudio ? (
+                <Square className="w-3.5 h-3.5 fill-slate-950" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
+            </button>
           </div>
 
           {/* Lifespan pill */}

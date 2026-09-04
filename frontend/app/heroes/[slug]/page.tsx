@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { fetchHeroBySlug, fetchHeroes, proxyImageUrl } from '../../../lib/api';
+import HeroAudioPlayer from '../../../components/HeroAudioPlayer';
 import {
   Sparkles,
   MapPin,
@@ -111,6 +112,9 @@ export default async function HeroDetailPage({ params }: { params: { slug: strin
               “{hero.tagline}”
             </p>
           </div>
+
+          {/* Multilingual Oral History Audio Player */}
+          <HeroAudioPlayer hero={hero} />
 
           {/* Original Synthesized Biography */}
           <div className="space-y-4 text-slate-300 text-sm sm:text-base leading-relaxed">
