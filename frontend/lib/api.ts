@@ -177,7 +177,11 @@ export async function fetchHeroes(
   // 2. High-Speed Parallel Wikipedia Discovery API
   if (q) {
     try {
-      const serverRes = await fetch('http://localhost:3000/api/qwen/search', {
+      const searchEndpoint =
+        typeof window !== 'undefined'
+          ? '/api/qwen/search'
+          : (process.env.NEXT_PUBLIC_APP_URL || 'http://127.0.0.1:3000') + '/api/qwen/search';
+      const serverRes = await fetch(searchEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q }),

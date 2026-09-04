@@ -18,38 +18,53 @@ export async function generateHistoricalSynthesis(params: {
 
   const userPrompt = `Hero/Contributor: ${name}\nState/Region: ${state}\nPrimary Domain: ${domain}\nBiographical Narrative: ${bio}\n\nSynthesize authentic domain-specific historical profile in JSON.`;
 
-  // 1. Containerized Local Ollama Qwen Model (Docker or Host)
-  const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434/api/generate';
+  // 1. Containerized or Host Local Ollama Model (Docker or Host Windows Ollama)
+  const configuredUrl = process.env.OLLAMA_URL;
+  const endpointCandidates = Array.from(
+    new Set(
+      [
+        configuredUrl,
+        'http://127.0.0.1:11434/api/generate',
+        'http://localhost:11434/api/generate',
+        'http://127.0.0.1:11435/api/generate',
+        'http://localhost:11435/api/generate',
+        'http://ollama:11434/api/generate',
+      ].filter(Boolean) as string[]
+    )
+  );
+
   const preferredModel = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
-  const candidateModels = [preferredModel, 'qwen2.5:14b', 'qwen2.5:3b', 'qwen2.5:1.5b', 'qwen2.5:latest'];
+  const candidateModels = [preferredModel, 'qwen2.5:14b', 'qwen2.5:1.5b', 'qwen2.5:3b', 'qwen2.5:latest', 'llama3.1:8b', 'gemma:2b'];
   const uniqueModels = Array.from(new Set(candidateModels));
 
-  for (const model of uniqueModels) {
-    try {
-      const res = await fetch(ollamaUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          prompt: `${systemPrompt}\n\n${userPrompt}`,
-          stream: false,
-          format: 'json',
-          options: {
-            temperature: 0.2,
-            top_p: 0.85,
-            num_ctx: 4096,
-          },
-        }),
-        signal: AbortSignal.timeout(25000),
-      });
+  for (const ollamaUrl of endpointCandidates) {
+    for (const model of uniqueModels) {
+      try {
+        const res = await fetch(ollamaUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model,
+            prompt: `${systemPrompt}\n\n${userPrompt}`,
+            stream: false,
+            format: 'json',
+            options: {
+              temperature: 0.2,
+              top_p: 0.85,
+              num_ctx: 4096,
+            },
+          }),
+          signal: AbortSignal.timeout(20000),
+        });
 
-      if (res.ok) {
-        const json = await res.json();
-        const parsed = parseJsonResponse(json.response);
-        if (parsed) return { ...parsed, provider: `LOCAL_OLLAMA_${model.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` };
+        if (res.ok) {
+          const json = await res.json();
+          const parsed = parseJsonResponse(json.response);
+          if (parsed) return { ...parsed, provider: `LOCAL_OLLAMA_${model.toUpperCase().replace(/[^A-Z0-9]/g, '_')}` };
+        }
+      } catch {
+        // Try next model or endpoint
       }
-    } catch {
-      // Continue to next local model or fallback
     }
   }
 
