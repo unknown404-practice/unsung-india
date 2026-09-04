@@ -595,10 +595,10 @@ export const SAMPLE_HEROES: Hero[] = [
     tagline: 'The medical scientist who discovered the Cholera Enterotoxin (1959), creating the foundation for oral rehydration therapy and modern cholera vaccines.',
     short_bio: 'Sambhu Nath De was an Indian medical scientist and researcher who made the epochal discovery of the cholera enterotoxin in 1959 at Kolkata. His discovery shifted medical science’s understanding of cholera from a blood-invasive disease to a toxin-induced dehydration disease, paving the way for Oral Rehydration Solution (ORS) and modern vaccines that have saved millions of lives globally.',
     is_unsung_reason: 'Nobel laureate Joshua Lederberg famously remarked that De should have won the Nobel Prize, yet he remained virtually uncelebrated in his own lifetime.',
-    image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Sambhu_Nath_De.jpg/600px-Sambhu_Nath_De.jpg',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Medical_Scientist_Prof._Sambhu_Nath_De.png',
     image_license: 'PUBLIC_DOMAIN',
     image_attribution: 'Public Domain (Archival photograph, Calcutta Medical College)',
-    image_source_page_url: 'https://commons.wikimedia.org/wiki/File:Sambhu_Nath_De.jpg',
+    image_source_page_url: 'https://commons.wikimedia.org/wiki/File:Medical_Scientist_Prof._Sambhu_Nath_De.png',
     view_count: 2300,
     banner_download_count: 530,
     contributions: [
