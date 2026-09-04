@@ -22,7 +22,7 @@ async function testSubmissionWorkflow() {
       'Awarded Padma Shri in 1960 for lifelong dedicated social welfare work.'
     ],
     sources_text: "Autobiography 'Shrinkhal Jhankar'; National Archives of India; Calcutta Police Special Branch records.",
-    image_url: 'https://upload.wikimedia.org/wikipedia/commons/4/47/Bina_Das.jpg',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Bina_Das_revolutionary.jpg',
     image_license_declared: 'PUBLIC_DOMAIN'
   };
 

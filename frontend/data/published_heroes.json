@@ -1,5 +1,191 @@
 [
   {
+    "id": "hero-khudiram-bose",
+    "slug": "khudiram-bose",
+    "name": "Khudiram Bose",
+    "name_local": "ক্ষুদিরাম বসু",
+    "birth_year": 1889,
+    "death_year": 1908,
+    "era": "Pre-1900 Era",
+    "state": "West Bengal",
+    "primary_domain": "Freedom Struggle",
+    "tagline": "Khudiram Bose was an inspirational pioneer from West Bengal who contributed crucially to Freedom Struggle.",
+    "short_bio": "One of the youngest revolutionaries of the Indian independence movement, martyred at age 18 in Muzaffarpur.",
+    "is_unsung_reason": "Despite their monumental sacrifices for West Bengal and the Indian nation, their story was overshadowed in national school textbooks.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/86/Khudiram_Bose_1905.jpg",
+    "image_license": "PUBLIC_DOMAIN",
+    "image_attribution": "Wikimedia Commons / Public Domain",
+    "image_source_page_url": "https://upload.wikimedia.org/wikipedia/commons/8/86/Khudiram_Bose_1905.jpg",
+    "view_count": 100,
+    "banner_download_count": 25,
+    "contributions": [
+      {
+        "display_order": 1,
+        "title": "Contribution Milestone 1",
+        "description": "Active leader in the Anushilan Samiti revolutionary organisation."
+      },
+      {
+        "display_order": 2,
+        "title": "Contribution Milestone 2",
+        "description": "Muzaffarpur action against oppressive colonial magistrate Douglas Kingsford."
+      },
+      {
+        "display_order": 3,
+        "title": "Contribution Milestone 3",
+        "description": "Embraced the gallows smiling at just 18 years old, igniting Bengali revolutionary songs."
+      }
+    ],
+    "timeline_events": [
+      {
+        "event_year": 1889,
+        "event_date": "1889",
+        "title": "Birth of Khudiram Bose",
+        "description": "Born in West Bengal, India.",
+        "display_order": 1
+      },
+      {
+        "event_year": 1908,
+        "event_date": "1908",
+        "title": "Legacy of Khudiram Bose",
+        "description": "Immortalized in Indian history for selfless service to the nation.",
+        "display_order": 2
+      }
+    ],
+    "sources": [
+      {
+        "title": "National Archives of India (Muzaffarpur Conspiracy Case File); PIB Bengal Martyrs Series.",
+        "source_type": "ARCHIVAL_DOCUMENT",
+        "is_primary_reference": true
+      }
+    ],
+    "published_at": "2026-09-04T11:26:45.137Z",
+    "submission_id": "sub-001"
+  },
+  {
+    "id": "hero-akkamma-cherian",
+    "slug": "akkamma-cherian",
+    "name": "Akkamma Cherian",
+    "name_local": "അക്കമ്മ ചെറിയാൻ",
+    "birth_year": 1909,
+    "death_year": 1982,
+    "era": "Modern Era",
+    "state": "Kerala",
+    "primary_domain": "Freedom Struggle",
+    "tagline": "Akkamma Cherian was an inspirational pioneer from Kerala who contributed crucially to Freedom Struggle.",
+    "short_bio": "Indian independence activist and feminist leader from Travancore affectionately hailed as the \"Jhansi Rani of Travancore\" by Mahatma Gandhi.",
+    "is_unsung_reason": "Despite their monumental sacrifices for Kerala and the Indian nation, their story was overshadowed in national school textbooks.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Akkamma_Cherian.jpg",
+    "image_license": "PUBLIC_DOMAIN",
+    "image_attribution": "Wikimedia Commons / Public Domain",
+    "image_source_page_url": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Akkamma_Cherian.jpg",
+    "view_count": 100,
+    "banner_download_count": 25,
+    "contributions": [
+      {
+        "display_order": 1,
+        "title": "Contribution Milestone 1",
+        "description": "Led 20,000 peaceful demonstrators against the autocratic Diwan CP Ramaswamy Iyer."
+      },
+      {
+        "display_order": 2,
+        "title": "Contribution Milestone 2",
+        "description": "Famously dared the police inspector to shoot her first when military troops opened fire."
+      },
+      {
+        "display_order": 3,
+        "title": "Contribution Milestone 3",
+        "description": "Formed the Desasevini Sangh volunteer brigade for women independence workers."
+      }
+    ],
+    "timeline_events": [
+      {
+        "event_year": 1909,
+        "event_date": "1909",
+        "title": "Birth of Akkamma Cherian",
+        "description": "Born in Kerala, India.",
+        "display_order": 1
+      },
+      {
+        "event_year": 1982,
+        "event_date": "1982",
+        "title": "Legacy of Akkamma Cherian",
+        "description": "Immortalized in Indian history for selfless service to the nation.",
+        "display_order": 2
+      }
+    ],
+    "sources": [
+      {
+        "title": "Kerala State Archives gazetteer; PIB Women Freedom Fighters of India.",
+        "source_type": "ARCHIVAL_DOCUMENT",
+        "is_primary_reference": true
+      }
+    ],
+    "published_at": "2026-09-04T11:26:34.659Z",
+    "submission_id": "sub-002"
+  },
+  {
+    "id": "hero-krishnaji-gopal-karve",
+    "slug": "krishnaji-gopal-karve",
+    "name": "Krishnaji Gopal Karve",
+    "name_local": "कृष्णाजी गोपाळ कर्वे",
+    "birth_year": 1887,
+    "death_year": 1910,
+    "era": "Pre-1900 Era",
+    "state": "Maharashtra",
+    "primary_domain": "Freedom Struggle",
+    "tagline": "Krishnaji Gopal Karve was an inspirational pioneer from Maharashtra who contributed crucially to Freedom Struggle.",
+    "short_bio": "Revolutionary freedom fighter from Nashik associated with the Abhinav Bharat Society founded by Veer Savarkar.",
+    "is_unsung_reason": "Despite their monumental sacrifices for Maharashtra and the Indian nation, their story was overshadowed in national school textbooks.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Revolutionary_Krishna_Karve.jpg",
+    "image_license": "PUBLIC_DOMAIN",
+    "image_attribution": "Wikimedia Commons / Public Domain",
+    "image_source_page_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Revolutionary_Krishna_Karve.jpg",
+    "view_count": 100,
+    "banner_download_count": 25,
+    "contributions": [
+      {
+        "display_order": 1,
+        "title": "Contribution Milestone 1",
+        "description": "Key member of the Abhinav Bharat revolutionary society in Maharashtra."
+      },
+      {
+        "display_order": 2,
+        "title": "Contribution Milestone 2",
+        "description": "Assassinated the oppressive British Collector A.M.T. Jackson in Nashik in December 1909."
+      },
+      {
+        "display_order": 3,
+        "title": "Contribution Milestone 3",
+        "description": "Executed by the British regime at Thane Jail in 1910."
+      }
+    ],
+    "timeline_events": [
+      {
+        "event_year": 1887,
+        "event_date": "1887",
+        "title": "Birth of Krishnaji Gopal Karve",
+        "description": "Born in Maharashtra, India.",
+        "display_order": 1
+      },
+      {
+        "event_year": 1910,
+        "event_date": "1910",
+        "title": "Legacy of Krishnaji Gopal Karve",
+        "description": "Immortalized in Indian history for selfless service to the nation.",
+        "display_order": 2
+      }
+    ],
+    "sources": [
+      {
+        "title": "Maharashtra State Archives; Abhinav Bharat Historical Society records.",
+        "source_type": "ARCHIVAL_DOCUMENT",
+        "is_primary_reference": true
+      }
+    ],
+    "published_at": "2026-09-04T11:26:14.097Z",
+    "submission_id": "sub-003"
+  },
+  {
     "id": "hero-bina-das",
     "slug": "bina-das",
     "name": "Bina Das",
