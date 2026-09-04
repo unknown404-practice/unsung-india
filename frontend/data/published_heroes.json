@@ -1,0 +1,64 @@
+[
+  {
+    "id": "hero-bina-das",
+    "slug": "bina-das",
+    "name": "Bina Das",
+    "name_local": "বীণা দাস",
+    "birth_year": 1911,
+    "death_year": 1986,
+    "era": "Modern Era",
+    "state": "West Bengal",
+    "primary_domain": "Freedom Struggle",
+    "tagline": "The fearlessly defiant revolutionary who fired at Bengal Governor Stanley Jackson at age 21.",
+    "short_bio": "Bina Das was an Indian revolutionary and nationalist from West Bengal who attempted to assassinate the British Governor of Bengal Stanley Jackson in 1932 at the Calcutta University convocation.",
+    "is_unsung_reason": "Her supreme courage and years of rigorous imprisonment were eclipsed in post-independence national textbooks.",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/47/Bina_Das.jpg",
+    "image_license": "PUBLIC_DOMAIN",
+    "image_attribution": "Wikimedia Commons / Public Domain",
+    "image_source_page_url": "https://upload.wikimedia.org/wikipedia/commons/4/47/Bina_Das.jpg",
+    "view_count": 100,
+    "banner_download_count": 25,
+    "contributions": [
+      {
+        "display_order": 1,
+        "title": "Contribution Milestone 1",
+        "description": "Fired shots at Governor Stanley Jackson during the Calcutta University convocation ceremony."
+      },
+      {
+        "display_order": 2,
+        "title": "Contribution Milestone 2",
+        "description": "Active leader of Chhatri Sangha women student resistance movement in Bengal."
+      },
+      {
+        "display_order": 3,
+        "title": "Contribution Milestone 3",
+        "description": "Awarded Padma Shri in 1960 for lifelong dedicated social welfare work."
+      }
+    ],
+    "timeline_events": [
+      {
+        "event_year": 1911,
+        "event_date": "1911",
+        "title": "Birth of Bina Das",
+        "description": "Born in West Bengal, India.",
+        "display_order": 1
+      },
+      {
+        "event_year": 1986,
+        "event_date": "1986",
+        "title": "Legacy of Bina Das",
+        "description": "Immortalized in Indian history for selfless service to the nation.",
+        "display_order": 2
+      }
+    ],
+    "sources": [
+      {
+        "title": "Autobiography 'Shrinkhal Jhankar'; National Archives of India; Calcutta Police Special Branch records.",
+        "source_type": "ARCHIVAL_DOCUMENT",
+        "is_primary_reference": true
+      }
+    ],
+    "published_at": "2026-09-04T11:17:25.783Z",
+    "submission_id": "sub-mtmv0iga-vuf6"
+  }
+]

@@ -49,12 +49,31 @@ export async function fetchBannerTemplateById(id: string): Promise<BannerTemplat
 }
 
 // Fast In-Memory Hero Cache (Sub-1ms instant retrieval)
-const HERO_CACHE = new Map<string, Hero>();
+export const HERO_CACHE = new Map<string, Hero>();
 
 // Seed cache with catalog heroes
 for (const h of SAMPLE_HEROES) {
   HERO_CACHE.set(h.slug.toLowerCase(), h);
   HERO_CACHE.set(h.id.toLowerCase(), h);
+}
+
+export function getAllAvailableHeroes(): Hero[] {
+  if (typeof window === 'undefined') {
+    try {
+      // Dynamic import on server to avoid bundling fs on client
+      const { getPublishedCommunityHeroes } = require('./submissions-db');
+      const communityHeroes = getPublishedCommunityHeroes();
+      for (const ch of communityHeroes) {
+        if (!HERO_CACHE.has(ch.slug.toLowerCase())) {
+          HERO_CACHE.set(ch.slug.toLowerCase(), ch as any);
+        }
+      }
+      return [...communityHeroes, ...SAMPLE_HEROES];
+    } catch {
+      return SAMPLE_HEROES;
+    }
+  }
+  return SAMPLE_HEROES;
 }
 
 // Convert any image URL to our CORS-friendly, direct-streaming proxy
@@ -112,21 +131,22 @@ export async function fetchHeroes(
   }
 
   const q = rawQuery.toLowerCase().trim();
+  const allHeroes = getAllAvailableHeroes();
 
   // If no search filter, return catalog
   if (!q && !state && !domain && !era && !unsung_level) {
     const startIndex = (page - 1) * limit;
-    const paginated = SAMPLE_HEROES.slice(startIndex, startIndex + limit);
+    const paginated = allHeroes.slice(startIndex, startIndex + limit);
     return {
       data: paginated,
-      total: SAMPLE_HEROES.length,
+      total: allHeroes.length,
       page,
       limit,
     };
   }
 
   // 1. Local catalog filtering
-  const localFiltered = SAMPLE_HEROES.filter((h) => {
+  const localFiltered = allHeroes.filter((h) => {
     const matchQuery =
       !q ||
       h.name.toLowerCase().includes(q) ||

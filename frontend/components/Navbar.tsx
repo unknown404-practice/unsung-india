@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, Sparkles, BookOpen, Send, Award, MapPin, Clock } from 'lucide-react';
+import { Compass, Sparkles, BookOpen, Send, Award, MapPin, Clock, ShieldCheck } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -14,6 +14,7 @@ export default function Navbar() {
     { name: 'Timeline', href: '/timeline', icon: Clock },
     { name: 'Banner Studio', href: '/banners', icon: Sparkles },
     { name: 'Suggest Hero', href: '/suggest', icon: Send },
+    { name: 'Mod Desk', href: '/admin/submissions', icon: ShieldCheck },
     { name: 'About & DPI', href: '/about', icon: BookOpen },
   ];
 
