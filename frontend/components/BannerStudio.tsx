@@ -1,27 +1,28 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Hero, BannerTemplate } from '../lib/types';
-import { proxyImageUrl } from '../lib/api';
-import {
-  Sparkles,
-  Download,
-  Check,
-  RefreshCw,
-  QrCode,
-  Shield,
-  Layers,
-  FileText,
-  Image as ImageIcon,
-  Upload,
-  Search,
-  User,
-  Sliders,
-  Link2,
-} from 'lucide-react';
-import QRCodeLib from 'qrcode';
+import { useState, useRef, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
+import QRCodeLib from 'qrcode';
+import {
+  Download,
+  Share2,
+  Sparkles,
+  Layers,
+  Image as ImageIcon,
+  Check,
+  FileText,
+  Shield,
+  Search,
+  Upload,
+  RefreshCw,
+  QrCode,
+  Sliders,
+  Maximize2,
+  ExternalLink,
+} from 'lucide-react';
+import { Hero, BannerTemplate } from '../lib/types';
+import { proxyImageUrl } from '../lib/api';
 
 interface BannerStudioProps {
   heroes: Hero[];
@@ -29,52 +30,56 @@ interface BannerStudioProps {
   templates: BannerTemplate[];
 }
 
-export default function BannerStudio({ heroes, initialHeroSlug, templates }: BannerStudioProps) {
-  // Mode selection: 'search' (AI synthesize any person), 'upload' (upload any photo/custom text), 'catalog' (pre-indexed)
-  const [activeMode, setActiveMode] = useState<'search' | 'upload' | 'catalog'>('search');
-
-  // AI Person Search input & loading
-  const [aiSearchInput, setAiSearchInput] = useState<string>('');
-  const [isAiSearching, setIsAiSearching] = useState<boolean>(false);
-
-  // Selected or Active Hero Object
-  const [currentHero, setCurrentHero] = useState<Hero>(() => {
-    return heroes.find((h) => h.slug === initialHeroSlug) || heroes[0];
-  });
-
-  // Inlined Base64 image for 100% fail-proof canvas exports
-  const [inlinedImageDataUrl, setInlinedImageDataUrl] = useState<string>('');
-
-  // Custom Human / Upload State
-  const [customName, setCustomName] = useState<string>('');
-  const [customNameLocal, setCustomNameLocal] = useState<string>('');
-  const [customState, setCustomState] = useState<string>('National / India');
-  const [customDomain, setCustomDomain] = useState<string>('Heritage & Freedom');
-  const [customEra, setCustomEra] = useState<string>('National Contributor');
-  const [customTagline, setCustomTagline] = useState<string>('Pioneering contributor whose legacy inspires generations.');
-  const [customBio, setCustomBio] = useState<string>('Eminent national contributor documented in historical archives.');
-  const [customContrib1, setCustomContrib1] = useState<string>('Pioneering historical milestone and national dedication.');
-  const [customContrib2, setCustomContrib2] = useState<string>('Monumental service to science, culture, and society.');
-  const [customImageUrl, setCustomImageUrl] = useState<string>('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('metro_pillar');
+export default function BannerStudio({
+  heroes,
+  initialHeroSlug,
+  templates,
+}: BannerStudioProps) {
+  const [selectedHeroSlug, setSelectedHeroSlug] = useState<string>(
+    initialHeroSlug || heroes[0]?.slug || ''
+  );
+  const [currentHero, setCurrentHero] = useState<Hero>(
+    heroes.find((h) => h.slug === initialHeroSlug) || heroes[0]
+  );
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(
+    templates[0]?.id || 'metro-pillar-9-16'
+  );
   const [selectedTheme, setSelectedTheme] = useState<string>('saffron_navy');
-  const [selectedLang, setSelectedLang] = useState<string>('en-hi');
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
+
+  // Studio Modes: 'search' | 'upload' | 'catalog'
+  const [activeMode, setActiveMode] = useState<'search' | 'upload' | 'catalog'>('search');
+  const [aiSearchInput, setAiSearchInput] = useState(
+    initialHeroSlug ? initialHeroSlug.replace(/-/g, ' ') : ''
+  );
+  const [isAiSearching, setIsAiSearching] = useState(false);
+
+  // Custom User Upload & Editable Form State
+  const [customName, setCustomName] = useState('');
+  const [customNameLocal, setCustomNameLocal] = useState('');
+  const [customState, setCustomState] = useState('');
+  const [customDomain, setCustomDomain] = useState('');
+  const [customEra, setCustomEra] = useState('');
+  const [customTagline, setCustomTagline] = useState('');
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  const [customContrib1, setCustomContrib1] = useState('');
+  const [customContrib2, setCustomContrib2] = useState('');
+
+  // Preloaded inlined base64 data URL for 100% fail-proof canvas export
+  const [inlinedImageDataUrl, setInlinedImageDataUrl] = useState<string>('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
   const bannerCanvasRef = useRef<HTMLDivElement>(null);
 
-  // Initial slug resolver
+  // Auto-fetch if slug is provided
   useEffect(() => {
     if (initialHeroSlug) {
-      const match = heroes.find((h) => h.slug === initialHeroSlug);
+      const match = heroes.find((h) => h.slug.toLowerCase() === initialHeroSlug.toLowerCase());
       if (match) {
         setCurrentHero(match);
       } else {
-        fetch(`/api/qwen/search`, {
+        fetch('/api/qwen/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: initialHeroSlug.replace(/-/g, ' ') }),
@@ -157,43 +162,51 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
           setCustomImageUrl(h.image_url);
           setCustomContrib1(h.contributions?.[0]?.description || h.short_bio);
           setCustomContrib2(h.contributions?.[1]?.description || '');
-          setInlinedImageDataUrl(''); // force immediate re-render of new image
-
-          setDownloadSuccess(`Synthesized ${h.name} with verified portrait & Wikipedia QR!`);
-          setTimeout(() => setDownloadSuccess(null), 4000);
+          setInlinedImageDataUrl('');
         }
       }
-    } catch (err) {
-      console.error('AI synthesis error:', err);
+    } catch (e) {
+      console.error('AI synthesis error:', e);
     } finally {
       setIsAiSearching(false);
     }
   };
 
-  // Handle Local Photo Upload
+  // Handle local image file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        setCustomImageUrl(dataUrl);
+      reader.onloadend = () => {
+        if (reader.result) {
+          const dataUrl = reader.result as string;
+          setCustomImageUrl(dataUrl);
+          setInlinedImageDataUrl(dataUrl);
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Build effective display properties based on active mode
-  const displayName = isUploadMode ? customName || 'National Contributor' : currentHero.name;
-  const displayNameLocal = isUploadMode ? customNameLocal : currentHero.name_local;
-  const displayState = isUploadMode ? customState || 'India' : currentHero.state;
-  const displayDomain = isUploadMode ? customDomain || 'Leadership & Service' : currentHero.primary_domain;
+  // Fields to display on live canvas
+  const displayName = isUploadMode ? customName || currentHero.name : currentHero.name;
+  const displayNameLocal = isUploadMode
+    ? customNameLocal || currentHero.name_local
+    : currentHero.name_local;
+  const displayState = isUploadMode ? customState || currentHero.state : currentHero.state;
+  const displayDomain = isUploadMode
+    ? customDomain || currentHero.primary_domain
+    : currentHero.primary_domain;
   const displayLifespan = isUploadMode
-    ? customEra
+    ? customEra || (currentHero.birth_year && currentHero.death_year ? `${currentHero.birth_year} – ${currentHero.death_year}` : currentHero.era || 'National Hero')
     : currentHero.birth_year && currentHero.death_year
     ? `${currentHero.birth_year} – ${currentHero.death_year}`
-    : currentHero.era || 'Historical Era';
-  const displayTagline = isUploadMode ? customTagline || 'Dedicated service to the nation.' : currentHero.tagline;
+    : currentHero.era || 'National Hero';
+
+  const displayTagline = isUploadMode
+    ? customTagline || currentHero.tagline
+    : currentHero.tagline;
+
   const displayContrib1 = isUploadMode
     ? customContrib1
     : currentHero.contributions?.[0]?.description || currentHero.short_bio;
@@ -212,7 +225,7 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
       `https://en.wikipedia.org/wiki/${encodeURIComponent(displayName.trim().replace(/\s+/g, '_'))}`;
 
     QRCodeLib.toDataURL(wikiTargetUrl, {
-      width: 180,
+      width: 200,
       margin: 1,
       color: { dark: '#000000', light: '#ffffff' },
     })
@@ -242,7 +255,7 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
         a.click();
         a.remove();
       } else {
-        const isLandscape = selectedTemplateId === 'roadside_billboard';
+        const isLandscape = selectedTemplateId === 'billboard-16-9' || selectedTemplateId === 'bus-shelter-4-3';
         const pdf = new jsPDF({
           orientation: isLandscape ? 'landscape' : 'portrait',
           unit: 'mm',
@@ -258,41 +271,51 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
       setTimeout(() => setDownloadSuccess(null), 4000);
     } catch (err) {
       console.error('Local export error:', err);
+      alert('Export failed. Please check browser image permissions.');
     } finally {
       setIsDownloading(false);
     }
   };
 
+  const isLandscape = selectedTemplateId === 'billboard-16-9' || selectedTemplateId === 'bus-shelter-4-3';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       {/* Control Panel: 5 Cols */}
-      <div className="lg:col-span-5 space-y-6 bg-glass p-6 sm:p-8 rounded-2xl border border-white/10 shadow-xl">
-        <div>
-          <h2 className="font-cinematic text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-saffron-400" />
-            <span>Universal Poster Factory</span>
-          </h2>
-          <p className="text-slate-400 text-xs sm:text-sm mt-1">
-            Turn <strong>any human or historical hero</strong> into high-resolution printable signage.
-          </p>
-        </div>
-
-        {/* Mode Selector Tabs */}
-        <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-950 border border-white/10 text-xs">
+      <div className="lg:col-span-5 rounded-2xl bg-glass-card border border-white/10 p-6 space-y-6 shadow-2xl">
+        {/* Creation Modes Tabs */}
+        <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-white/10 text-xs">
           <button
             onClick={() => setActiveMode('search')}
-            className={`py-2 px-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-1.5 ${
+            className={`py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-all ${
               activeMode === 'search'
                 ? 'bg-saffron-500 text-slate-950 shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>AI Search Any</span>
+            <span>AI Search</span>
           </button>
           <button
-            onClick={() => setActiveMode('upload')}
-            className={`py-2 px-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-1.5 ${
+            onClick={() => {
+              setActiveMode('upload');
+              if (!customName) {
+                setCustomName(currentHero.name);
+                setCustomNameLocal(currentHero.name_local || '');
+                setCustomState(currentHero.state);
+                setCustomDomain(currentHero.primary_domain);
+                setCustomEra(
+                  currentHero.birth_year && currentHero.death_year
+                    ? `${currentHero.birth_year} – ${currentHero.death_year}`
+                    : currentHero.era || 'National Hero'
+                );
+                setCustomTagline(currentHero.tagline);
+                setCustomImageUrl(currentHero.image_url);
+                setCustomContrib1(currentHero.contributions?.[0]?.description || currentHero.short_bio);
+                setCustomContrib2(currentHero.contributions?.[1]?.description || '');
+              }
+            }}
+            className={`py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-all ${
               activeMode === 'upload'
                 ? 'bg-saffron-500 text-slate-950 shadow-md'
                 : 'text-slate-400 hover:text-white'
@@ -303,7 +326,7 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
           </button>
           <button
             onClick={() => setActiveMode('catalog')}
-            className={`py-2 px-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-1.5 ${
+            className={`py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-all ${
               activeMode === 'catalog'
                 ? 'bg-saffron-500 text-slate-950 shadow-md'
                 : 'text-slate-400 hover:text-white'
@@ -316,64 +339,49 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
 
         {/* MODE 1: AI Search Any Person */}
         {activeMode === 'search' && (
-          <div className="space-y-3 p-4 rounded-xl bg-slate-900/90 border border-saffron-500/30">
-            <label className="text-xs font-semibold text-saffron-400 uppercase tracking-wider block">
-              Search ANY Person in India or World
+          <div className="space-y-3">
+            <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
+              Generate Poster for ANY Person
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={aiSearchInput}
                 onChange={(e) => setAiSearchInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleAiSynthesize();
-                }}
-                placeholder="e.g. Pazhassi Raja, Alluri Sitarama Raju, Bhikaji Cama, Tirot Sing..."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-white/15 text-white text-xs sm:text-sm focus:outline-none focus:border-saffron-500"
+                onKeyDown={(e) => e.key === 'Enter' && handleAiSynthesize()}
+                placeholder="e.g. Lata Mangeshkar, C.V. Raman, Alluri..."
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-sm focus:outline-none focus:border-saffron-500 placeholder:text-slate-500"
               />
               <button
                 onClick={handleAiSynthesize}
-                disabled={isAiSearching}
-                className="px-4 py-2.5 rounded-xl font-bold text-xs bg-saffron-500 hover:bg-saffron-400 text-slate-950 shrink-0 transition-all disabled:opacity-50 flex items-center gap-1.5"
+                disabled={isAiSearching || !aiSearchInput.trim()}
+                className="px-4 py-2.5 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-saffron-glow transition-all disabled:opacity-50"
               >
                 {isAiSearching ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                <span>Synthesize</span>
+                <span>Generate</span>
               </button>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Fetches historical portrait, Indic script name, lifetime dates, inspiring quote & verified milestones automatically via Qwen & Wikipedia.
-            </p>
           </div>
         )}
 
-        {/* MODE 2: Custom Photo Upload & Editable Details */}
+        {/* MODE 2: Upload Photo / Custom Maker */}
         {activeMode === 'upload' && (
-          <div className="space-y-4 p-4 rounded-xl bg-slate-900/90 border border-white/10 text-xs">
-            <div className="space-y-2">
-              <label className="font-semibold text-slate-300 uppercase tracking-wider block">
-                1. Upload Local Photo / Portrait
+          <div className="space-y-3 bg-slate-900/60 p-4 rounded-xl border border-white/5 text-xs">
+            <div>
+              <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-2">
+                Upload Photo & Custom Details
               </label>
-              <div className="flex items-center gap-3">
+              <div className="space-y-2">
                 <input
                   type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
                   accept="image/*"
-                  className="hidden"
+                  onChange={handleFileUpload}
+                  className="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-saffron-500/20 file:text-saffron-300 hover:file:bg-saffron-500/30 cursor-pointer"
                 />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 py-2.5 px-3 rounded-xl border border-dashed border-saffron-500/40 bg-saffron-500/10 hover:bg-saffron-500/20 text-saffron-300 flex items-center justify-center gap-2 transition-all font-medium"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Choose Image File (JPG, PNG)</span>
-                </button>
-              </div>
-              <div className="pt-1">
                 <input
                   type="text"
                   value={customImageUrl}
@@ -406,26 +414,6 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
                   className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs"
                 />
               </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Domain / Field</label>
-                <input
-                  type="text"
-                  value={customDomain}
-                  onChange={(e) => setCustomDomain(e.target.value)}
-                  placeholder="Domain"
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Era / Timeline</label>
-                <input
-                  type="text"
-                  value={customEra}
-                  onChange={(e) => setCustomEra(e.target.value)}
-                  placeholder="e.g. 1900 - 1980"
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-white/10 text-white text-xs"
-                />
-              </div>
             </div>
 
             <div>
@@ -441,7 +429,7 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
           </div>
         )}
 
-        {/* MODE 3: Pre-Indexed Catalog Dropdown */}
+        {/* MODE 3: Catalog Dropdown */}
         {activeMode === 'catalog' && (
           <div className="space-y-2">
             <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
@@ -464,10 +452,10 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
           </div>
         )}
 
-        {/* Signage Template Selector */}
+        {/* Signage Template & Aspect Ratio Selector */}
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
-            Public Signage Dimensions
+            Select Poster Aspect Ratio
           </label>
           <div className="grid grid-cols-2 gap-2.5">
             {templates.map((t) => {
@@ -478,19 +466,21 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
                   onClick={() => setSelectedTemplateId(t.id)}
                   className={`p-3 rounded-xl text-left border text-xs transition-all ${
                     isSelected
-                      ? 'bg-saffron-500/15 border-saffron-500 text-white shadow-saffron-glow font-semibold'
+                      ? 'bg-saffron-500/15 border-saffron-500 text-white shadow-saffron-glow font-semibold ring-1 ring-saffron-400'
                       : 'bg-slate-900/60 border-white/5 text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                   }`}
                 >
                   <p className="font-medium text-white">{t.name}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">{t.aspect_ratio}</p>
+                  <p className="text-[10px] text-saffron-400 mt-0.5 font-mono font-bold">
+                    Ratio: {t.aspect_ratio}
+                  </p>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Theme & Color Palette */}
+        {/* Theme & Palette */}
         <div className="space-y-2">
           <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">
             Theme & Palette
@@ -516,7 +506,7 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
           </div>
         </div>
 
-        {/* Export & Download CTA */}
+        {/* Export CTA */}
         <div className="pt-4 border-t border-white/10 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -553,15 +543,16 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
       {/* Live Preview Canvas: 7 Cols */}
       <div className="lg:col-span-7 flex flex-col items-center">
         <div className="w-full flex items-center justify-between pb-3 px-2">
-          <span className="text-xs uppercase tracking-widest text-saffron-400 font-mono">
-            LIVE SIGNAGE CANVAS PREVIEW
+          <span className="text-xs uppercase tracking-widest text-saffron-400 font-mono flex items-center gap-1.5">
+            <Maximize2 className="w-3.5 h-3.5" />
+            <span>LIVE SIGNAGE CANVAS PREVIEW</span>
           </span>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-saffron-300 font-mono font-bold bg-saffron-500/10 px-2.5 py-1 rounded-lg border border-saffron-500/20">
             {template.name} ({template.aspect_ratio})
           </span>
         </div>
 
-        {/* Dynamic Visual Banner Simulator Canvas */}
+        {/* Dynamic Visual Banner Simulator Canvas with Guaranteed Aspect Ratio */}
         <div
           ref={bannerCanvasRef}
           className={`w-full relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 border ${
@@ -571,11 +562,13 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
               ? 'bg-[#FDFBF7] text-slate-950 border-slate-300'
               : 'bg-[#090D16] text-white border-saffron-500/30 shadow-saffron-glow'
           } ${
-            selectedTemplateId === 'roadside_billboard'
-              ? 'aspect-[16/9] max-w-2xl'
-              : selectedTemplateId === 'metro_pillar'
+            selectedTemplateId === 'billboard-16-9'
+              ? 'aspect-[16/9] max-w-3xl'
+              : selectedTemplateId === 'bus-shelter-4-3'
+              ? 'aspect-[4/3] max-w-2xl'
+              : selectedTemplateId === 'metro-pillar-9-16'
               ? 'aspect-[9/16] max-w-sm'
-              : 'aspect-[3/4] max-w-md'
+              : 'aspect-[1/1.414] max-w-md'
           }`}
         >
           {/* Top Tiranga Strip */}
@@ -585,83 +578,167 @@ export default function BannerStudio({ heroes, initialHeroSlug, templates }: Ban
             <div className="flex-1 bg-[#138808]" />
           </div>
 
-          <div className="p-5 sm:p-7 flex flex-col justify-between h-[calc(100%-10px)] space-y-3">
-            {/* Header Identity */}
-            <div>
-              <div className="flex items-center justify-between border-b pb-2 mb-2 border-white/10">
+          {/* LANDSCAPE LAYOUT (16:9 Billboard or 4:3 Bus Shelter) */}
+          {isLandscape ? (
+            <div className="p-4 sm:p-6 flex flex-col justify-between h-[calc(100%-10px)] space-y-2">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b pb-1.5 border-white/10">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-saffron-400 font-cinematic">
                   UNSUNG HEROES OF INDIA • NATIONAL TRIBUTE
                 </span>
-                <span className="text-[9px] text-slate-400 tracking-wider font-mono">
+                <span className="text-[9px] text-slate-300 tracking-wider font-mono">
                   {displayState}
                 </span>
               </div>
 
-              <h3 className="font-cinematic font-bold text-lg sm:text-2xl leading-tight text-white">
-                {displayName}
-              </h3>
-              {displayNameLocal && (
-                <p className="text-xs sm:text-sm text-saffron-300/95 font-indic mt-0.5">
-                  {displayNameLocal}
-                </p>
-              )}
-              <p className="text-[10px] text-slate-400 font-mono mt-0.5">
-                {displayDomain} • {displayLifespan}
-              </p>
-            </div>
-
-            {/* FULL FACE & PORTRAIT HERO CONTAINER (Framed with no face clipping) */}
-            <div className="relative rounded-2xl overflow-hidden flex-1 min-h-[160px] sm:min-h-[220px] bg-[#06090F] border border-white/15 flex items-center justify-center shadow-inner">
-              <img
-                src={inlinedImageDataUrl || (rawTargetImageUrl.startsWith('data:') ? rawTargetImageUrl : proxyImageUrl(rawTargetImageUrl))}
-                alt={displayName}
-                crossOrigin="anonymous"
-                className="w-full h-full object-contain object-center p-1.5"
-              />
-              <div className="absolute bottom-2 left-2 right-2 p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
-                <p className="text-[10px] sm:text-xs italic text-slate-200 text-center leading-snug line-clamp-2">
-                  “{displayTagline}”
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom Contributions + Dynamic QR Code */}
-            <div className="pt-2">
-              <div className="flex items-end justify-between gap-3">
-                <div className="space-y-1 text-[9px] sm:text-[10px] text-slate-300 max-w-[70%]">
-                  <p className="font-semibold text-saffron-400 uppercase text-[8px] tracking-wider">
-                    Key Achievements & Sacrifices:
-                  </p>
-                  {displayContrib1 && (
-                    <p className="line-clamp-1 leading-tight">• {displayContrib1}</p>
-                  )}
-                  {displayContrib2 && (
-                    <p className="line-clamp-1 leading-tight text-slate-400">• {displayContrib2}</p>
-                  )}
+              {/* Landscape 2-Column Body */}
+              <div className="grid grid-cols-12 gap-3 flex-1 items-center min-h-0">
+                {/* Column 1: Portrait Image (5 Cols) */}
+                <div className="col-span-5 relative h-full min-h-[140px] rounded-xl overflow-hidden bg-[#06090F] border border-white/15 flex items-center justify-center shadow-inner">
+                  <img
+                    src={inlinedImageDataUrl || (rawTargetImageUrl.startsWith('data:') ? rawTargetImageUrl : proxyImageUrl(rawTargetImageUrl))}
+                    alt={displayName}
+                    crossOrigin="anonymous"
+                    className="w-full h-full object-contain object-center p-1.5"
+                  />
                 </div>
 
-                {/* QR Code */}
+                {/* Column 2: Identity & Milestones (7 Cols) */}
+                <div className="col-span-7 flex flex-col justify-between h-full space-y-2">
+                  <div>
+                    <h3 className="font-cinematic font-bold text-base sm:text-2xl leading-tight text-white">
+                      {displayName}
+                    </h3>
+                    {displayNameLocal && (
+                      <p className="text-xs sm:text-sm text-saffron-300 font-indic mt-0.5">
+                        {displayNameLocal}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-slate-300 font-mono mt-0.5">
+                      {displayDomain} • {displayLifespan}
+                    </p>
+                  </div>
+
+                  <div className="p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
+                    <p className="text-[10px] sm:text-xs italic text-slate-200 leading-snug line-clamp-2">
+                      “{displayTagline}”
+                    </p>
+                  </div>
+
+                  {/* Achievements */}
+                  <div className="space-y-0.5 text-[9px] text-slate-300">
+                    {displayContrib1 && (
+                      <p className="line-clamp-1 leading-tight">• {displayContrib1}</p>
+                    )}
+                    {displayContrib2 && (
+                      <p className="line-clamp-1 leading-tight text-slate-400">• {displayContrib2}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Footer with GUARANTEED WIKIPEDIA QR CODE */}
+              <div className="pt-1.5 border-t border-white/10 flex items-center justify-between gap-2">
+                <div className="text-[8px] text-slate-400 font-mono">
+                  <span>Sources: PIB / National Archives / Wikimedia Commons • PUBLIC DOMAIN</span>
+                </div>
+
+                {/* Wikipedia QR Code in Landscape */}
                 {qrCodeDataUrl && (
-                  <div className="flex flex-col items-center shrink-0">
+                  <div className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded-lg border border-white/15 shrink-0">
                     <img
                       src={qrCodeDataUrl}
                       alt="Wikipedia QR Code"
-                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-white p-0.5 shadow-md"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-white p-0.5"
                     />
-                    <span className="text-[7px] text-slate-400 mt-0.5 font-mono">
-                      Scan for Wikipedia
-                    </span>
+                    <div className="text-left text-[8px] font-mono leading-tight">
+                      <span className="text-saffron-300 font-bold block">Scan for Wikipedia</span>
+                      <span className="text-slate-400 text-[7px]">Full Biography</span>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+          ) : (
+            /* PORTRAIT / VERTICAL LAYOUT (9:16 Metro Pillar or ISO A3 Notice Board) */
+            <div className="p-5 sm:p-7 flex flex-col justify-between h-[calc(100%-10px)] space-y-3">
+              {/* Header Identity */}
+              <div>
+                <div className="flex items-center justify-between border-b pb-2 mb-2 border-white/10">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-saffron-400 font-cinematic">
+                    UNSUNG HEROES OF INDIA • NATIONAL TRIBUTE
+                  </span>
+                  <span className="text-[9px] text-slate-400 tracking-wider font-mono">
+                    {displayState}
+                  </span>
+                </div>
 
-              {/* Mandatory Source & License Watermark */}
-              <div className="mt-2.5 pt-1.5 border-t border-white/10 flex items-center justify-between text-[7px] text-slate-400 font-mono">
-                <span>Sources: PIB / National Archives / Wikimedia Commons</span>
-                <span>License: PUBLIC_DOMAIN</span>
+                <h3 className="font-cinematic font-bold text-lg sm:text-2xl leading-tight text-white">
+                  {displayName}
+                </h3>
+                {displayNameLocal && (
+                  <p className="text-xs sm:text-sm text-saffron-300/95 font-indic mt-0.5">
+                    {displayNameLocal}
+                  </p>
+                )}
+                <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                  {displayDomain} • {displayLifespan}
+                </p>
+              </div>
+
+              {/* FULL FACE & PORTRAIT HERO CONTAINER (Framed with no face clipping) */}
+              <div className="relative rounded-2xl overflow-hidden flex-1 min-h-[160px] sm:min-h-[220px] bg-[#06090F] border border-white/15 flex items-center justify-center shadow-inner">
+                <img
+                  src={inlinedImageDataUrl || (rawTargetImageUrl.startsWith('data:') ? rawTargetImageUrl : proxyImageUrl(rawTargetImageUrl))}
+                  alt={displayName}
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain object-center p-1.5"
+                />
+                <div className="absolute bottom-2 left-2 right-2 p-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
+                  <p className="text-[10px] sm:text-xs italic text-slate-200 text-center leading-snug line-clamp-2">
+                    “{displayTagline}”
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom Contributions + GUARANTEED WIKIPEDIA QR CODE */}
+              <div className="pt-2">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="space-y-1 text-[9px] sm:text-[10px] text-slate-300 max-w-[70%]">
+                    <p className="font-semibold text-saffron-400 uppercase text-[8px] tracking-wider">
+                      Key Achievements & Sacrifices:
+                    </p>
+                    {displayContrib1 && (
+                      <p className="line-clamp-1 leading-tight">• {displayContrib1}</p>
+                    )}
+                    {displayContrib2 && (
+                      <p className="line-clamp-1 leading-tight text-slate-400">• {displayContrib2}</p>
+                    )}
+                  </div>
+
+                  {/* Guaranteed Wikipedia QR Code */}
+                  {qrCodeDataUrl && (
+                    <div className="flex flex-col items-center shrink-0">
+                      <img
+                        src={qrCodeDataUrl}
+                        alt="Wikipedia QR Code"
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-white p-0.5 shadow-md"
+                      />
+                      <span className="text-[7px] text-saffron-300 font-bold mt-0.5 font-mono">
+                        Scan for Wikipedia
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mandatory Source & License Watermark */}
+                <div className="mt-2.5 pt-1.5 border-t border-white/10 flex items-center justify-between text-[7px] text-slate-400 font-mono">
+                  <span>Sources: PIB / National Archives / Wikimedia Commons</span>
+                  <span>License: PUBLIC_DOMAIN</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
