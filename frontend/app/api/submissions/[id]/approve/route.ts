@@ -43,7 +43,36 @@ export async function POST(
     const shortBio = body.short_bio || submission.short_bio;
     const tagline = body.tagline || `${heroName} was a revered figure from ${state} who made enduring contributions to ${primaryDomain}.`;
     const isUnsungReason = body.is_unsung_reason || `Despite their monumental dedication to ${state} and India's ${primaryDomain}, their story was overshadowed in national school textbooks.`;
-    const imageUrl = body.image_url || submission.image_url || 'https://upload.wikimedia.org/wikipedia/commons/4/44/Subhas_Chandra_Bose_NRB.jpg';
+    let imageUrl = body.image_url || submission.image_url;
+
+    // Automatic Wikipedia/Wikimedia portrait discovery if image is unverified or missing
+    if (!imageUrl || imageUrl.includes('thumb/')) {
+      try {
+        const wikiRes = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
+            heroName
+          )}&prop=pageimages&format=json&pilicense=any&piprop=original|thumbnail&pithumbsize=1000`,
+          { headers: { 'User-Agent': 'Mozilla/5.0 UnsungIndiaDPI/1.0' } }
+        );
+        if (wikiRes.ok) {
+          const wikiJson = await wikiRes.json();
+          const pages = wikiJson?.query?.pages || {};
+          for (const pid in pages) {
+            const resolvedImg = pages[pid]?.original?.source || pages[pid]?.thumbnail?.source;
+            if (resolvedImg) {
+              imageUrl = resolvedImg.split('?')[0];
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Wikipedia image auto-resolution error:', err);
+      }
+    }
+
+    if (!imageUrl) {
+      imageUrl = 'https://upload.wikimedia.org/wikipedia/commons/4/44/Subhas_Chandra_Bose_NRB.jpg';
+    }
     
     // Build contributions
     const rawContributions = body.key_contributions || submission.key_contributions || [];
