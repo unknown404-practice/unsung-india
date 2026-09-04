@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   MapPin,
@@ -12,37 +12,47 @@ import {
   Calendar,
   Layers,
   ChevronRight,
+  Search,
+  RefreshCw,
+  Award,
 } from 'lucide-react';
 import { Hero } from '../lib/types';
 import HeroCard from './HeroCard';
+import { proxyImageUrl } from '../lib/api';
 
 interface IndiaHeritageMapProps {
   heroes: Hero[];
 }
 
 const INDIAN_STATES_REGIONS = [
-  { id: 'all', name: 'All India', region: 'National', count: 18, color: '#FF9933' },
-  { id: 'west-bengal', name: 'West Bengal', region: 'East', count: 4, color: '#38BDF8' },
-  { id: 'maharashtra', name: 'Maharashtra', region: 'West', count: 2, color: '#FB923C' },
-  { id: 'tamil-nadu', name: 'Tamil Nadu', region: 'South', count: 2, color: '#A855F7' },
-  { id: 'punjab', name: 'Punjab', region: 'North', count: 1, color: '#FACC15' },
-  { id: 'andhra-pradesh', name: 'Andhra Pradesh', region: 'South', count: 1, color: '#4ADE80' },
-  { id: 'odisha', name: 'Odisha', region: 'East', count: 1, color: '#2DD4BF' },
-  { id: 'kerala', name: 'Kerala', region: 'South', count: 2, color: '#34D399' },
-  { id: 'meghalaya', name: 'Meghalaya', region: 'Northeast', count: 1, color: '#E879F9' },
-  { id: 'assam', name: 'Assam', region: 'Northeast', count: 1, color: '#F472B6' },
-  { id: 'gujarat', name: 'Gujarat', region: 'West', count: 1, color: '#FB7185' },
-  { id: 'bihar', name: 'Bihar', region: 'East', count: 1, color: '#60A5FA' },
-  { id: 'karnataka', name: 'Karnataka', region: 'South', count: 1, color: '#818CF8' },
-  { id: 'uttar-pradesh', name: 'Uttar Pradesh', region: 'North', count: 1, color: '#FBBF24' },
-  { id: 'madhya-pradesh', name: 'Madhya Pradesh', region: 'Central', count: 1, color: '#C084FC' },
-  { id: 'jharkhand', name: 'Jharkhand', region: 'East', count: 1, color: '#34D399' },
+  { id: 'all', name: 'All India', region: 'National', count: 25, color: '#FF9933' },
+  { id: 'andhra-pradesh', name: 'Andhra Pradesh', region: 'South', count: 6, color: '#4ADE80' },
+  { id: 'west-bengal', name: 'West Bengal', region: 'East', count: 8, color: '#38BDF8' },
+  { id: 'maharashtra', name: 'Maharashtra', region: 'West', count: 7, color: '#FB923C' },
+  { id: 'tamil-nadu', name: 'Tamil Nadu', region: 'South', count: 7, color: '#A855F7' },
+  { id: 'karnataka', name: 'Karnataka', region: 'South', count: 5, color: '#818CF8' },
+  { id: 'punjab', name: 'Punjab', region: 'North', count: 5, color: '#FACC15' },
+  { id: 'kerala', name: 'Kerala', region: 'South', count: 6, color: '#34D399' },
+  { id: 'odisha', name: 'Odisha', region: 'East', count: 5, color: '#2DD4BF' },
+  { id: 'bihar', name: 'Bihar', region: 'East', count: 5, color: '#60A5FA' },
+  { id: 'uttar-pradesh', name: 'Uttar Pradesh', region: 'North', count: 6, color: '#FBBF24' },
+  { id: 'gujarat', name: 'Gujarat', region: 'West', count: 6, color: '#FB7185' },
+  { id: 'meghalaya', name: 'Meghalaya', region: 'Northeast', count: 3, color: '#E879F9' },
+  { id: 'assam', name: 'Assam', region: 'Northeast', count: 5, color: '#F472B6' },
+  { id: 'jharkhand', name: 'Jharkhand', region: 'East', count: 5, color: '#34D399' },
+  { id: 'madhya-pradesh', name: 'Madhya Pradesh', region: 'Central', count: 4, color: '#C084FC' },
 ];
 
 export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
-  const [selectedState, setSelectedState] = useState<string>('all');
+  const [selectedState, setSelectedState] = useState<string>('andhra-pradesh');
   const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [searchFilter, setSearchFilter] = useState<string>('');
+  const [stateHeroes, setStateHeroes] = useState<Hero[]>([]);
+  const [isLoadingState, setIsLoadingState] = useState(false);
+
+  // Dynamic AI Hero Search inside Map
+  const [aiCustomQuery, setAiCustomQuery] = useState('');
+  const [isAiSearching, setIsAiSearching] = useState(false);
 
   const regions = ['All', 'North', 'South', 'East', 'West', 'Central', 'Northeast'];
 
@@ -57,17 +67,69 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
   const activeStateObj =
     INDIAN_STATES_REGIONS.find((s) => s.id === selectedState) || INDIAN_STATES_REGIONS[0];
 
-  const stateHeroes = heroes.filter((h) => {
-    if (selectedState === 'all') return true;
-    return h.state.toLowerCase().includes(activeStateObj.name.toLowerCase());
-  });
+  // Fetch state figures dynamically via Qwen + Wikipedia state resolver
+  useEffect(() => {
+    if (selectedState === 'all') {
+      setStateHeroes(heroes);
+      return;
+    }
+
+    setIsLoadingState(true);
+    const queryState = activeStateObj.name;
+
+    fetch(`/api/qwen/state-heroes?state=${encodeURIComponent(queryState)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.heroes && data.heroes.length > 0) {
+          setStateHeroes(data.heroes);
+        } else {
+          // Fallback to local catalog filter
+          const fallback = heroes.filter((h) =>
+            h.state.toLowerCase().includes(queryState.toLowerCase())
+          );
+          setStateHeroes(fallback);
+        }
+      })
+      .catch(() => {
+        const fallback = heroes.filter((h) =>
+          h.state.toLowerCase().includes(queryState.toLowerCase())
+        );
+        setStateHeroes(fallback);
+      })
+      .finally(() => {
+        setIsLoadingState(false);
+      });
+  }, [selectedState, heroes, activeStateObj.name]);
+
+  // Handle Dynamic AI Search for any figure to place on map
+  const handleAiStateSearch = async () => {
+    if (!aiCustomQuery.trim()) return;
+    setIsAiSearching(true);
+    try {
+      const res = await fetch('/api/qwen/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: aiCustomQuery.trim() }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hero) {
+          setStateHeroes((prev) => [data.hero, ...prev.filter((h) => h.slug !== data.hero.slug)]);
+        }
+      }
+    } catch (e) {
+      console.error('AI state search error:', e);
+    } finally {
+      setIsAiSearching(false);
+    }
+  };
 
   return (
     <div className="space-y-12">
       {/* Interactive Map & State Explorer Hub */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Side: Region Filter & Interactive State Grid (5 Cols) */}
-        <div className="lg:col-span-5 rounded-2xl bg-glass-card border border-white/10 p-6 space-y-6 shadow-2xl">
+        <div className="lg:col-span-5 rounded-2xl bg-glass-card border border-white/10 p-6 space-y-5 shadow-2xl">
           <div className="space-y-2 border-b border-white/10 pb-4">
             <div className="flex items-center gap-2 text-saffron-400 text-xs font-mono font-bold tracking-wider uppercase">
               <Compass className="w-4 h-4" />
@@ -77,7 +139,7 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
               Explore by State & Sacred Soil
             </h3>
             <p className="text-xs text-slate-400">
-              Select any State or Union Territory to uncover the unsung heroes and historical revolutionaries of that land.
+              Click any State to instantly discover the unsung revolutionaries, scientists, and martyrs of that land.
             </p>
           </div>
 
@@ -104,13 +166,13 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
               type="text"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="Search State (e.g. Bengal, Punjab, Assam)..."
+              placeholder="Search State (e.g. Andhra, Bengal, Punjab)..."
               className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-white focus:outline-none focus:border-saffron-500 placeholder:text-slate-500"
             />
           </div>
 
           {/* State Badges Grid */}
-          <div className="grid grid-cols-2 gap-2 max-h-[380px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-2 max-h-[360px] overflow-y-auto pr-1">
             {filteredStates.map((st) => {
               const isSelected = selectedState === st.id;
               return (
@@ -119,7 +181,7 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
                   onClick={() => setSelectedState(st.id)}
                   className={`p-3 rounded-xl text-left border text-xs transition-all flex items-center justify-between ${
                     isSelected
-                      ? 'bg-saffron-500/15 border-saffron-500 text-white shadow-saffron-glow font-bold'
+                      ? 'bg-saffron-500/15 border-saffron-500 text-white shadow-saffron-glow font-bold ring-1 ring-saffron-400'
                       : 'bg-slate-900/60 border-white/5 text-slate-300 hover:bg-slate-900 hover:border-white/15'
                   }`}
                 >
@@ -130,8 +192,8 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
                     />
                     <span className="truncate">{st.name}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400 bg-black/40 px-2 py-0.5 rounded-full">
-                    {st.region}
+                  <span className="text-[10px] font-mono text-saffron-400 bg-black/40 px-2 py-0.5 rounded-full">
+                    {st.count}
                   </span>
                 </button>
               );
@@ -149,14 +211,14 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-saffron-400" />
-                <h2 className="font-cinematic text-2xl sm:text-3xl font-bold text-white">
+                <MapPin className="w-6 h-6 text-saffron-400" />
+                <h2 className="font-cinematic text-2xl sm:text-3xl font-bold text-white uppercase tracking-wide">
                   {activeStateObj.name}
                 </h2>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5 font-mono">
                 Region: {activeStateObj.region} India • Discovered Contributors:{' '}
-                <span className="text-saffron-400 font-bold font-mono">
+                <span className="text-saffron-400 font-bold font-mono text-sm">
                   {stateHeroes.length} Heroes
                 </span>
               </p>
@@ -171,11 +233,43 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
             </Link>
           </div>
 
+          {/* AI Quick Search inside State Map */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={aiCustomQuery}
+              onChange={(e) => setAiCustomQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAiStateSearch()}
+              placeholder={`Search or add any unsung hero from ${activeStateObj.name}...`}
+              className="flex-1 px-3.5 py-2 rounded-xl bg-slate-900/90 border border-white/10 text-xs text-white focus:outline-none focus:border-saffron-500 placeholder:text-slate-500"
+            />
+            <button
+              onClick={handleAiStateSearch}
+              disabled={isAiSearching || !aiCustomQuery.trim()}
+              className="px-4 py-2 rounded-xl bg-saffron-500 hover:bg-saffron-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-saffron-glow transition-all disabled:opacity-50"
+            >
+              {isAiSearching ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="w-3.5 h-3.5" />
+              )}
+              <span>Discover</span>
+            </button>
+          </div>
+
           {/* Visual Geographic State Card Showcase */}
-          {stateHeroes.length > 0 ? (
+          {isLoadingState ? (
+            <div className="p-12 text-center space-y-3">
+              <RefreshCw className="w-8 h-8 text-saffron-400 animate-spin mx-auto" />
+              <p className="text-xs text-slate-400 font-mono">
+                Discovering national figures from {activeStateObj.name} via Qwen AI...
+              </p>
+            </div>
+          ) : stateHeroes.length > 0 ? (
             <div className="space-y-4">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
-                Spotlighted National Contributors from {activeStateObj.name}
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono flex items-center gap-2">
+                <Award className="w-4 h-4 text-saffron-400" />
+                <span>Featured Heroes from {activeStateObj.name}</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {stateHeroes.slice(0, 4).map((h) => (
@@ -183,9 +277,9 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
                     key={h.id}
                     className="p-4 rounded-xl bg-slate-900/80 border border-white/10 hover:border-saffron-500/40 transition-all flex items-center gap-3.5 group shadow-lg"
                   >
-                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-950 shrink-0 border border-white/10">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-950 shrink-0 border border-white/10 flex items-center justify-center">
                       <img
-                        src={h.image_url}
+                        src={proxyImageUrl(h.image_url)}
                         alt={h.name}
                         className="w-full h-full object-contain object-center p-1 group-hover:scale-105 transition-transform"
                       />
@@ -223,13 +317,6 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
               <p className="text-sm text-slate-300">
                 Discovering more local heroes from {activeStateObj.name}...
               </p>
-              <Link
-                href={`/explore?state=${encodeURIComponent(activeStateObj.name)}`}
-                className="inline-flex items-center gap-1.5 text-xs text-saffron-400 hover:underline font-semibold"
-              >
-                <span>Search dynamic records via National AI Index</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
           )}
         </div>
@@ -239,7 +326,7 @@ export default function IndiaHeritageMap({ heroes }: IndiaHeritageMapProps) {
       <div className="space-y-6 pt-4">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <h3 className="font-cinematic text-xl font-bold text-white flex items-center gap-2">
-            <span>Contributors from {activeStateObj.name}</span>
+            <span>All Contributors from {activeStateObj.name}</span>
             <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-saffron-500/20 text-saffron-300 border border-saffron-500/30">
               {stateHeroes.length} Figures
             </span>
