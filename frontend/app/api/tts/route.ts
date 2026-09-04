@@ -27,7 +27,7 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     te: 'మహారాష్ట్ర',
     mr: 'महाराष्ट्र',
     gu: 'મહારાષ્ટ્ર',
-    kn: 'મહારાષ્ટ્ર',
+    kn: 'મહારಾષ્ટ્ર',
   },
   'Tamil Nadu': {
     bn: 'তামিলনাড়ু',
@@ -36,7 +36,7 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     te: 'తమిళనాడు',
     mr: 'तमिळनाडू',
     gu: 'તમિલનાડુ',
-    kn: 'ತಮಿಳುನಾಡು',
+    kn: 'தமிழ்நாடு',
   },
   'Meghalaya': {
     bn: 'মেঘালয়',
@@ -87,7 +87,7 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
     bn: 'কর্ণাটক',
     hi: 'कर्नाटक',
     ta: 'கர்நாடகா',
-    te: 'కర్ణాಟಕ',
+    te: 'ಕರ್ನಾಟಕ',
     mr: 'कर्नाटक',
     gu: 'કર્ણાટક',
     kn: 'ಕರ್ನಾಟಕ',
@@ -95,134 +95,51 @@ const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
   'Gujarat': {
     bn: 'গুজরাট',
     hi: 'गुजरात',
-    ta: 'குજરાત',
+    ta: 'குજરાத்',
     te: 'గుజరాత్',
-    mr: 'गुजरात',
+    mr: 'ગુજરાત',
     gu: 'ગુજરાત',
     kn: 'ગુજરાત',
   },
-  'National': {
-    bn: 'ভারতবর্ষ',
-    hi: 'भारतवर्ष',
-    ta: 'பாரத தேசம்',
-    te: 'భారతదేశం',
-    mr: 'भारतवर्ष',
-    gu: 'ભારતવર્ષ',
-    kn: 'ಭಾರತ ದೇಶ',
-  },
 };
 
-// Known famous heroes pure Indic translations
+// Pure Monolingual Pre-Compiled Translations for core icons
 const HERO_PURE_TRANSLATIONS: Record<string, Record<string, { name: string; tagline: string; bio: string }>> = {
   'subhas-chandra-bose': {
     bn: {
       name: 'নেতাজি সুভাষচন্দ্র বসু',
       tagline: 'তোমরা আমাকে রক্ত দাও, আমি তোমাদের স্বাধীনতা দেব!',
-      bio: 'তিনি ছিলেন ভারতের স্বাধীনতা আন্দোলনের এক অবিসংবাদিত বিপ্লবী মহানায়ক। তিনি আজাদ হিন্দ ফৌজ গঠন করে ব্রিটিশ সাম্রাজ্যের বিরুদ্ধে সশস্ত্র সংগ্রাম পরিচালনা করেছিলেন।',
+      bio: 'তিনি ছিলেন ভারতের স্বাধীনতা আন্দোলনের এক অবিসংবাদিত বিপ্লবী মহানায়ক। তিনি আজাদ হিন্দ ফৌজ গঠন করে ব্রিটিশ সাম্রাজ্যের বিরুদ্ধে সশস্ত্র সংগ্রাম পরিচালনা করেছিলেন। তাঁর বলিষ্ঠ নেতৃত্ব সমগ্র জাতিকে স্বাধীনতার মন্ত্রে উদ্বুদ্ধ করেছিল।',
     },
     hi: {
       name: 'नेताजी सुभाष चंद्र बोस',
       tagline: 'तुम मुझे खून दो, मैं तुम्हें आजादी दूंगा!',
-      bio: 'वे भारत के स्वतंत्रता संग्राम के महान क्रांतिकारी नायक थे। उन्होंने आज़ाद हिन्द फ़ौज का नेतृत्व करते हुए ब्रिटिश हुकूमत के खिलाफ ऐतिहासिक सशस्त्र क्रांति का बिगुल फूंका था।',
+      bio: 'वे भारत के स्वतंत्रता संग्राम के महान क्रांतिकारी नायक थे। उन्होंने आज़ाद हिन्द फ़ौज का नेतृत्व करते हुए ब्रिटिश हुकूमत के खिलाफ ऐतिहासिक सशस्त्र क्रांति का बिगुल फूंका था। इनके अद्वितीय नेतृत्व ने पूरे देश में स्वाधीनता की नई चेतना जागृत की थी।',
     },
     ta: {
       name: 'நேதாஜி சுபாஷ் சந்திர போஸ்',
       tagline: 'உங்கள் ரத்தத்தைத் தாருங்கள், நான் உங்களுக்கு விடுதலையைத் தருகிறேன்!',
-      bio: 'இவர் இந்திய விடுதலைப் போராட்டத்தின் மாபெரும் புரட்சித் தலைவராவார். இந்திய தேசிய ராணுவத்தை வழிநடத்தி பிரிட்டிஷ் ஆதிக்கத்திற்கு எதிராக வீரமிக்க ஆயுதப் போராட்டத்தை நடத்தினார்.',
+      bio: 'இவர் இந்திய விடுதலைப் போராட்டத்தின் மாபெரும் புரட்சித் தலைவராவார். இந்திய தேசிய ராணுவத்தை வழிநடத்தி பிரிட்டிஷ் ஆதிக்கத்திற்கு எதிராக வீரமிக்க ஆயுதப் போராட்டத்தை நடத்தினார். இவரது வீரம் பல தலைமுறைகளுக்கு வழிகாட்டுகிறது.',
     },
     te: {
       name: 'నేతాజీ సుభాష్ చంద్రబోస్',
       tagline: 'మీరు నాకు రక్తాన్ని ఇవ్వండి, నేను మీకు స్వాతంత్ర్యాన్ని ఇస్తాను!',
-      bio: 'ఈయన భారత స్వాతంత్ర్య పోరాటంలో అగ్రగామి విప్లవ వీరుడు. ఆజాద్ హింద్ ఫౌజ్‌ను నడిపిస్తూ బ్రిటిష్ పాలనకు వ్యతిరేకంగా సాహసోపేతమైన పోరాటం సాగించారు.',
+      bio: 'ఈయన భారత స్వాతంత్ర్య పోరాటంలో అగ్రగామి విప్లవ వీరుడు. ఆజాద్ హింద్ ఫౌజ్‌ను నడిపిస్తూ బ్రిటిష్ పాలనకు వ్యతిరేకంగా సాహసోపేతమైన పోరాటం సాగించారు. ఆయన ధైర్యసాహసాలు చిరస్మరణీయమైనవి.',
     },
     mr: {
       name: 'नेताजी सुभाषचंद्र बोस',
       tagline: 'तुम्ही मला रक्त द्या, मी तुम्हाला स्वातंत्र्य देईन!',
-      bio: 'ते भारतीय स्वातंत्र्यलढ्यातील एक महान क्रांतिकारक नेते होते. त्यांनी आझाद हिंद सेनेचे नेतृत्व करून ब्रिटिश साम्राज्यशाहीविरुद्ध ऐतिहासिक सशस्त्र लढा दिला.',
+      bio: 'ते भारतीय स्वातंत्र्यलढ्यातील एक महान क्रांतिकारक नेते होते. त्यांनी आझाद हिंद सेनेचे नेतृत्व करून ब्रिटिश साम्राज्यशाहीविरुद्ध ऐतिहासिक सशस्त्र लढा दिला. त्यांचे नेतृत्व प्रत्येक देशवासीयाला प्रेरणा देते.',
     },
     gu: {
       name: 'નેતાજી સુભાષ ચંદ્ર બોઝ',
       tagline: 'તમે મને લોહી આપો, હું તમને આઝાદી આપીશ!',
-      bio: 'તેઓ ભારતના સ્વાતંત્ર્ય સંગ્રામના અગ્રણી ક્રાંતિકારી નેતા હતા. તેમણે આઝાદ હિન્દ ફોજનું નેતૃત્વ કરીને બ્રિટિશ હકૂમત સામે ઐતિહાસિક સશસ્ત્ર ક્રાંતિ કરી હતી.',
+      bio: 'તેઓ ભારતના સ્વાતંત્ર્ય સંગ્રામના અગ્રણી ક્રાંતિકારી નેતા હતા. તેમણે આઝાદ હિન્દ ફોજનું નેતૃત્વ કરીને બ્રિટિશ હકૂમત સામે ઐતિહાસિક સશસ્ત્ર ક્રાંતિ કરી હતી. તેમનું બલિદાન અમર છે.',
     },
     kn: {
       name: 'ನೇತಾಜಿ ಸುಭಾಷ್ ಚಂದ್ರ ಬೋಸ್',
       tagline: 'ನೀವು ನನಗೆ ರಕ್ತ ಕೊಡಿ, ನಾನು ನಿಮಗೆ ಸ್ವಾತಂತ್ರ್ಯ ಕೊಡುತ್ತೇನೆ!',
-      bio: 'ಇವರು ಭಾರತದ ಸ್ವಾತಂತ್ರ್ಯ ಸಂಗ್ರಾಮದ ಮಹಾನ್ ಕ್ರಾಂತಿಕಾರಿ ನಾಯಕರಾಗಿದ್ದರು. ಆಜಾದ್ ಹಿಂದ್ ಫೌಜ್ ಮುನ್ನಡೆಸಿ ಬ್ರಿಟಿಷ್ ಸಾಮ್ರಾಜ್ಯಶಾಹಿಯ ವಿರುದ್ಧ ಐತಿಹಾಸಿಕ ಸಶಸ್ತ್ರ ಹೋರಾಟ ನಡೆಸಿದರು.',
-    },
-  },
-  'mahatma-gandhi': {
-    bn: {
-      name: 'মহাত্মা গান্ধী',
-      tagline: 'অহিংসাই পরম ধর্ম এবং সত্যই ঈশ্বর।',
-      bio: 'তিনি ছিলেন ভারতের স্বাধীনতা সংগ্রামের মহান দিশারী, যিনি সত্য ও অহিংসার পথে ব্রিটিশ শাসনের বিরুদ্ধে দেশকে নেতৃত্ব দিয়েছিলেন।',
-    },
-    hi: {
-      name: 'महात्मा गांधी',
-      tagline: 'अहिंसा परमो धर्मः और सत्य ही ईश्वर है।',
-      bio: 'वे भारत के स्वतंत्रता आंदोलन के महान मार्गदर्शक थे, जिन्होंने सत्य और अहिंसा के मार्ग पर चलकर देश को आजादी दिलाई।',
-    },
-    ta: {
-      name: 'மகாத்மா காந்தி',
-      tagline: 'அகிம்சையே சிறந்த வழி மற்றும் உண்மையே கடவுள்.',
-      bio: 'இவர் இந்திய விடுதலை இயக்கத்தின் தந்தை எனப் போற்றப்படுபவர். சத்தியம் மற்றும் அகிம்சை வழியில் நாட்டை வழிநடத்தினார்.',
-    },
-    te: {
-      name: 'మహాత్మా గాంధీ',
-      tagline: 'అహింసయే పరమ ధర్మం మరియు సత్యమే దేవుడు.',
-      bio: 'ఈయన భారత స్వాతంత్ర్య సమరానికి మార్గదర్శి. సత్యం మరియు అహింస మార్గాల్లో దేశాన్ని ముందుకు నడిపించారు.',
-    },
-    mr: {
-      name: 'महात्मा गांधी',
-      tagline: 'अहिंसा हाच परम धर्म आणि सत्य हाच ईश्वर.',
-      bio: 'ते भारतीय स्वातंत्र्यलढ्याचे महानायक होते, ज्यांनी सत्य आणि अहिंसेच्या मार्गाने देशाला स्वातंत्र्य मिळवून दिले.',
-    },
-    gu: {
-      name: 'મહાત્મા ગાંધી',
-      tagline: 'અહિંસા પરમો ધર્મ અને સત્ય એ જ ઈશ્વર છે.',
-      bio: 'તેઓ ભારતીય સ્વાતંત્ર્ય સંગ્રામના પ્રણેતા હતા, જેમણે સત્ય અને અહિંસાના માર્ગે દેશને આઝાદી અપાવી.',
-    },
-    kn: {
-      name: 'ಮಹಾತ್ಮಾ ಗಾಂಧಿ',
-      tagline: 'ಅಹಿಂಸೆಯೇ ಪರಮ ಧರ್ಮ ಮತ್ತು ಸತ್ಯವೇ ದೇವರು.',
-      bio: 'ಇವರು ಭಾರತದ ಸ್ವಾತಂತ್ರ್ಯ ಚಳವಳಿಯ ಪಿತಾಮಹ. ಸತ್ಯ ಮತ್ತು ಅಹಿಂಸೆಯ ಮಾರ್ಗದಲ್ಲಿ ದೇಶಕ್ಕೆ ಸ್ವಾತಂತ್ರ್ಯ ತಂದುಕೊಟ್ಟರು.',
-    },
-  },
-  'bhagat-singh': {
-    bn: {
-      name: 'শহীদ ভগৎ সিং',
-      tagline: 'ইনকিলাব জিন্দাবাদ! বিপ্লব দীর্ঘজীবী হোক!',
-      bio: 'তিনি ছিলেন ভারতের অমর বিপ্লবী শহীদ, যিনি অত্যন্ত অল্প বয়সে দেশের স্বাধীনতার জন্য হাসিমুখে ফাঁসির দড়ি বরণ করেছিলেন।',
-    },
-    hi: {
-      name: 'शहीद भगत सिंह',
-      tagline: 'इंकलाब जिंदाबाद! क्रांति अमर रहे!',
-      bio: 'वे भारत के अमर क्रांतिकारी शहीद थे, जिन्होंने अत्यंत युवावस्था में देश की स्वाधीनता के लिए हंसते-हंसते फांसी का फंदा चूम लिया था।',
-    },
-    ta: {
-      name: 'பகத் சிங்',
-      tagline: 'இன்குலாப் ஜிந்தாபாத்! புரட்சி ஓங்குக!',
-      bio: 'இவர் இளம் வயதிலேயே தாய்நாட்டின் விடுதலைக்காக தன் உயிரைத் தியாகம் செய்த வீரத் தியாகியாவார்.',
-    },
-    te: {
-      name: 'భగత్ సింగ్',
-      tagline: 'ఇంక్విలాబ్ జిందాబాద్! విప్లవం వర్ధిల్లాలి!',
-      bio: 'ఈయన చిన్న వయస్సులోనే దేశ స్వాతంత్ర్యం కోసం నవ్వుతూ ఉరికొయ్యను ముద్దాడిన అమరవీరుడు.',
-    },
-    mr: {
-      name: 'शहीद भगतसिंग',
-      tagline: 'इंकलाब जिंदाबाद! क्रांती चिरंतन राहो!',
-      bio: 'ते भारताचे अमर क्रांतिकारक होते, ज्यांनी तरुण वयात मातृभूमीच्या स्वातंत्र्यासाठी हसतमुखाने फाशी स्वीकारली.',
-    },
-    gu: {
-      name: 'શહીદ ભગત સિંહ',
-      tagline: 'ઇન્કિલાબ ઝિંદાબાદ! ક્રાંતિ અમર રહો!',
-      bio: 'તેઓ ભારતના અમર ક્રાંતિકારી શહીદ હતા, જેમણે નાની ઉંમરે દેશ માટે હસતા મુખે ફાંસી સ્વીકારી.',
-    },
-    kn: {
-      name: 'ಭಗತ್ ಸಿಂಗ್',
-      tagline: 'ಇಂಕ್ವಿಲಾಬ್ ಜಿಂದಾಬಾದ್! ಕ್ರಾಂತಿ ಚಿರಾಯುವಾಗಲಿ!',
-      bio: 'ಇವರು ಎಳೆಯ ವಯಸ್ಸಿನಲ್ಲಿಯೇ ದೇಶದ ಸ್ವಾತಂತ್ರ್ಯಕ್ಕಾಗಿ ನಗುನಗುತ್ತಾ ಪ್ರಾಣಾರ್ಪಣೆ ಮಾಡಿದ ಮಹಾನ್ ಹುತಾತ್ಮರು.',
+      bio: 'ಇವರು ಭಾರತದ ಸ್ವಾತಂತ್ರ್ಯ ಸಂಗ್ರಾಮದ ಮಹಾನ್ ಕ್ರಾಂತಿಕಾರಿ ನಾಯಕರಾಗಿದ್ದರು. ಆಜಾದ್ ಹಿಂದ್ ಫೌಜ್ ಮುನ್ನಡೆಸಿ ಬ್ರಿಟಿಷ್ ಸಾಮ್ರಾಜ್ಯಶಾಹಿಯ ವಿರುದ್ಧ ಐತಿಹಾಸಿಕ ಸಶಸ್ತ್ರ ಹೋರಾಟ ನಡೆಸಿದರು. ಇವರ ತ್ಯಾಗ ಚಿರಂತನ.',
     },
   },
 };
@@ -236,12 +153,10 @@ function getLocalizedState(state: string, lang: string): string {
   return state || (lang === 'bn' ? 'ভারতবর্ষ' : lang === 'hi' ? 'भारतवर्ष' : 'India');
 }
 
-// 100% Pure Monolingual Story Synthesizer
-function buildPureMonolingualStory(hero: any, lang: string): string {
+export function buildPureMonolingualStory(hero: any, lang: string): string {
   const heroSlug = (hero.slug || hero.id || '').toLowerCase();
   const localState = getLocalizedState(hero.state, lang);
 
-  // Check if we have exact pre-compiled pure translation
   if (HERO_PURE_TRANSLATIONS[heroSlug] && HERO_PURE_TRANSLATIONS[heroSlug][lang]) {
     const item = HERO_PURE_TRANSLATIONS[heroSlug][lang];
     switch (lang) {
@@ -292,6 +207,7 @@ function buildPureMonolingualStory(hero: any, lang: string): string {
   }
 }
 
+// Single Continuous Full Audio Stream Handler
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const text = searchParams.get('text')?.trim();
@@ -301,35 +217,68 @@ export async function GET(request: NextRequest) {
     return new NextResponse('Text is required', { status: 400 });
   }
 
-  try {
-    const cleanText = text.slice(0, 250);
-    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(
-      cleanText
-    )}`;
+  // Split into chunks of max 180 chars
+  const chunks: string[] = [];
+  const rawSentences = text.split(/(?<=[।\.!\?])\s+/).filter(Boolean);
 
-    const response = await fetch(ttsUrl, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 UnsungHeroesDPI/1.0',
-        Accept: 'audio/mpeg,audio/*;q=0.9',
-      },
-    });
-
-    if (response.ok) {
-      const buffer = await response.arrayBuffer();
-      return new NextResponse(buffer, {
-        headers: {
-          'Content-Type': 'audio/mpeg',
-          'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+  for (const s of rawSentences) {
+    if (s.length <= 180) {
+      chunks.push(s);
+    } else {
+      // subsplit on comma
+      const sub = s.split(/,\s+/);
+      for (const part of sub) {
+        if (part.trim()) chunks.push(part.trim());
+      }
     }
-  } catch (err) {
-    console.error('TTS Stream Error:', err);
   }
 
-  return new NextResponse('TTS generation failed', { status: 500 });
+  try {
+    // Fetch all audio chunks concurrently
+    const audioBuffers = await Promise.all(
+      chunks.map(async (chunk) => {
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(
+          chunk
+        )}`;
+        const res = await fetch(ttsUrl, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 UnsungHeroesDPI/1.0',
+            Accept: 'audio/mpeg,audio/*;q=0.9',
+          },
+        });
+        if (res.ok) {
+          return await res.arrayBuffer();
+        }
+        return new ArrayBuffer(0);
+      })
+    );
+
+    // Combine all MP3 buffers into ONE single continuous MP3 stream
+    let totalLength = 0;
+    for (const b of audioBuffers) {
+      totalLength += b.byteLength;
+    }
+
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const b of audioBuffers) {
+      combined.set(new Uint8Array(b), offset);
+      offset += b.byteLength;
+    }
+
+    return new NextResponse(combined, {
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': combined.byteLength.toString(),
+        'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (err) {
+    console.error('Full TTS Stream Error:', err);
+    return new NextResponse('Full audio stream generation failed', { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -342,26 +291,22 @@ export async function POST(request: NextRequest) {
     }
 
     const shortLang = lang.slice(0, 2).toLowerCase();
-
-    // 100% Pure Monolingual Generation in Requested Language
     const spokenText = buildPureMonolingualStory(hero, shortLang);
 
-    // Split text into natural spoken sentences (respecting Indic punctuation । and . ? !)
     const sentences = spokenText
       .split(/(?<=[।\.!\?])\s+/)
       .map((s) => s.trim())
       .filter(Boolean);
 
-    const audioUrls = sentences.map(
-      (s) => `/api/tts?text=${encodeURIComponent(s)}&lang=${shortLang}`
-    );
+    // Direct single continuous full audio stream URL
+    const fullAudioStreamUrl = `/api/tts?lang=${shortLang}&text=${encodeURIComponent(spokenText)}`;
 
     return NextResponse.json({
       success: true,
       lang: shortLang,
       spokenText,
       sentences,
-      audioUrls,
+      fullAudioStreamUrl,
     });
   } catch (error: any) {
     console.error('TTS API error:', error);
