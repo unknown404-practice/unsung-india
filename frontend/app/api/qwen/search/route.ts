@@ -207,8 +207,9 @@ export async function POST(request: NextRequest) {
       ? wikiExtract.split('. ').slice(0, 3).join('. ') + '.'
       : `${finalName} was an eminent Indian contributor whose monumental legacy shaped our national history.`;
 
+    const baseTagline = `An immortal contributor to India's ${domain.toLowerCase()}.`;
     // 3. Multi-Cloud AI Synthesis (OpenRouter, NVIDIA NIM, HuggingFace, Groq, or Local Ollama)
-    let aiEnhancedTagline = tagline;
+    let aiEnhancedTagline = baseTagline;
     let aiEnhancedContributions = [
       {
         id: '1',

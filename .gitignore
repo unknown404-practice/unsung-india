@@ -13,7 +13,13 @@ __pycache__/
 venv/
 .venv/
 
-# Environment and IDE
+# Environment and Secrets
+.env
+.env.local
 .env*.local
+frontend/.env.local
+frontend/.env
+
+# IDE & OS
 .vscode/
 .DS_Store

@@ -36,10 +36,10 @@ export async function generateHistoricalSynthesis(params: {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
-          response_format: { type: 'json_object' },
+          max_tokens: 400,
           temperature: 0.3,
         }),
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(20000),
       });
 
       if (res.ok) {
@@ -49,7 +49,7 @@ export async function generateHistoricalSynthesis(params: {
         if (parsed) return { ...parsed, provider: 'OPENROUTER_QWEN_2.5_72B' };
       }
     } catch (e) {
-      console.warn('OpenRouter synthesis failed:', e);
+      console.warn('OpenRouter synthesis fallback:', e);
     }
   }
 
@@ -189,8 +189,16 @@ function parseJsonResponse(raw: string | undefined): {
 } | null {
   if (!raw) return null;
   try {
-    const cleaned = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const json = JSON.parse(cleaned);
+    let text = raw.trim();
+    if (text.includes('```')) {
+      text = text.replace(/```(?:json)?([\s\S]*?)```/gi, '$1').trim();
+    }
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      text = text.slice(firstBrace, lastBrace + 1);
+    }
+    const json = JSON.parse(text);
 
     const tagline = json.tagline || '';
     const unsung_reason = json.unsung_reason || '';
