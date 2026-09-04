@@ -85,15 +85,14 @@ export async function generateHistoricalSynthesis(params: {
               format: 'json',
               keep_alive: '24h',
               options: {
-                temperature: 0.1,
+                temperature: 0.0,
                 top_k: 20,
-                top_p: 0.85,
-                num_ctx: 1024,
-                num_predict: 180,
+                num_ctx: 384,
+                num_predict: 80,
                 num_thread: 8,
               },
             }),
-            signal: AbortSignal.timeout(18000),
+            signal: AbortSignal.timeout(2500),
           });
 
           if (res.ok) {
