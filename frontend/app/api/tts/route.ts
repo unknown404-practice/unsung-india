@@ -1,48 +1,165 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Indic translation / transliteration dictionary for hero narration templates
-function generateIndicScriptText(
+// State and region localization dictionary
+const STATE_LOCALIZATIONS: Record<string, Record<string, string>> = {
+  'West Bengal': {
+    bn: 'পশ্চিমবঙ্গ',
+    hi: 'पश्चिम बंगाल',
+    ta: 'மேற்கு வங்காளம்',
+    te: 'పశ్ಚಿమ బెంగాల్',
+    mr: 'पश्चिम बंगाल',
+    gu: 'પશ્ચિમ બંગાળ',
+    kn: 'ಪಶ್ಚಿಮ ಬಂಗಾಳ',
+  },
+  'Andhra Pradesh': {
+    bn: 'অন্ধ্রপ্রদেশ',
+    hi: 'आंध्र प्रदेश',
+    ta: 'ஆந்திரப் பிரதேசம்',
+    te: 'ఆంధ్రప్రదేశ్',
+    mr: 'आंध्र प्रदेश',
+    gu: 'આંધ્ર પ્રદેશ',
+    kn: 'ಆಂಧ್ರಪ್ರದೇಶ',
+  },
+  'Maharashtra': {
+    bn: 'মহারাষ্ট্র',
+    hi: 'महाराष्ट्र',
+    ta: 'மகாராஷ்டிரா',
+    te: 'మహారాష్ట్ర',
+    mr: 'महाराष्ट्र',
+    gu: 'મહારાષ્ટ્ર',
+    kn: 'ಮಹಾರಾಷ್ಟ್ರ',
+  },
+  'Tamil Nadu': {
+    bn: 'তামিলনাড়ু',
+    hi: 'तमिलनाडु',
+    ta: 'தமிழ்நாடு',
+    te: 'తమిళనాడు',
+    mr: 'तमिळनाडू',
+    gu: 'તમિલનાડુ',
+    kn: 'ತಮಿಳುನಾಡು',
+  },
+  'Meghalaya': {
+    bn: 'মেঘালয়',
+    hi: 'मेघालय',
+    ta: 'மேகாலயா',
+    te: 'మేఘాలయ',
+    mr: 'मेघालय',
+    gu: 'મેઘાલય',
+    kn: 'ಮೇಘಾಲಯ',
+  },
+  'Kerala': {
+    bn: 'কেরল',
+    hi: 'केरल',
+    ta: 'கேரளா',
+    te: 'కేరళ',
+    mr: 'केरळ',
+    gu: 'કેરળ',
+    kn: 'ಕೇರಳ',
+  },
+  'Punjab': {
+    bn: 'পাঞ্জাব',
+    hi: 'पंजाब',
+    ta: 'பஞ்சாப்',
+    te: 'పంజాబ్',
+    mr: 'पंजाब',
+    gu: 'પંજાબ',
+    kn: 'ಪಂಜಾಬ್',
+  },
+  'Odisha': {
+    bn: 'ওড়িশা',
+    hi: 'ओडिशा',
+    ta: 'ஒடிசா',
+    te: 'ఒడిశా',
+    mr: 'ओडिशा',
+    gu: 'ઓડિશા',
+    kn: 'ಒಡಿಶಾ',
+  },
+  'Bihar': {
+    bn: 'বিহার',
+    hi: 'बिहार',
+    ta: 'பீகார்',
+    te: 'బీహార్',
+    mr: 'बिहार',
+    gu: 'બિહાર',
+    kn: 'ಬಿಹಾರ',
+  },
+  'Karnataka': {
+    bn: 'কর্ণাটক',
+    hi: 'कर्नाटक',
+    ta: 'கர்நாடகா',
+    te: 'కర్ణాటక',
+    mr: 'कर्नाटक',
+    gu: 'કર્ણાટક',
+    kn: 'ಕರ್ನಾಟಕ',
+  },
+  'Gujarat': {
+    bn: 'গুজরাট',
+    hi: 'गुजरात',
+    ta: 'குஜராத்',
+    te: 'గుజరాత్',
+    mr: 'गुजरात',
+    gu: 'ગુજરાત',
+    kn: 'ಗುಜರಾತ್',
+  },
+};
+
+function getLocalizedState(state: string, lang: string): string {
+  for (const [key, mapping] of Object.entries(STATE_LOCALIZATIONS)) {
+    if (state.toLowerCase().includes(key.toLowerCase())) {
+      return mapping[lang] || state;
+    }
+  }
+  return state;
+}
+
+// Humanistic, warm, calm documentary tribute generator
+function craftHumanisticStoryTribute(
   name: string,
   nameLocal: string | null | undefined,
   state: string,
   domain: string,
   tagline: string,
   shortBio: string,
+  isUnsungReason: string,
   lang: string
 ): string {
-  const displayName = nameLocal || name;
+  const localState = getLocalizedState(state, lang);
+  const cleanTagline = tagline.replace(/^[“"]|[”"]$/g, '').trim();
+
+  // Pick appropriate script name
+  const heroName = (lang === 'bn' && nameLocal) ? nameLocal : (lang === 'hi' && nameLocal && /[\u0900-\u097F]/.test(nameLocal)) ? nameLocal : name;
 
   switch (lang) {
-    case 'hi':
-    case 'hi-IN':
-      return `भारत के महान राष्ट्रीय नायक ${displayName}। राज्य: ${state}। कार्यक्षेत्र: ${domain}। “${tagline}”। जीवनी: ${shortBio}`;
-
     case 'bn':
     case 'bn-IN':
-      return `ভারতের মহান জাতীয় বীর ${displayName}। রাজ্য: ${state}। কর্মক্ষেত্র: ${domain}। “${tagline}”। পরিচিতি: ${shortBio}`;
+      return `আজ আমরা গভীর শ্রদ্ধার সাথে স্মরণ করছি ${heroName}-কে। ${localState}-র পুণ্যভূমিতে জন্ম নেওয়া এই মহান ব্যক্তিত্ব আমাদের শিখিয়ে গেছেন নিঃস্বার্থ ত্যাগ ও অদম্য সাহসের মূল্য। তাঁর সেই অমর বাণী—"${cleanTagline}"। মাতৃভূমির মুক্তি ও অগ্রগতির জন্য তাঁর এই চিরন্তন অবদান আমাদের হৃদয়ে চিরকাল দেশপ্রেমের আলো হয়ে বেঁচে থাকবে।`;
+
+    case 'hi':
+    case 'hi-IN':
+      return `आइए आज हम श्रद्धापूर्वक नमन करते हैं ${heroName} को। ${localState} की पावन धरा पर जन्मे इस महान व्यक्तित्व ने हमें राष्ट्र सेवा और असीम साहस की प्रेरणा दी। उनका अमर संदेश था—"${cleanTagline}"। मातृभूमि के लिए उनका यह अद्वितीय योगदान और बलिदान हमारी आने वाली पीढ़ियों को सदैव प्रेरित करता रहेगा।`;
 
     case 'ta':
     case 'ta-IN':
-      return `இந்தியாவின் மாபெரும் சுதந்திரப் போராட்ட நாயகர் ${displayName}. மாநிலம்: ${state}. துறை: ${domain}. "${tagline}". வரலாறு: ${shortBio}`;
+      return `இன்று நாம் ஆழ்ந்த மரியாதையுடன் போற்றும் உன்னத தலைவர், ${heroName}. ${localState} மண்ணில் உதித்த இந்த மாமனிதர், நமக்கு சுயமரியாதையையும் தேச பக்தியையும் கற்றுத் தந்தார். "${cleanTagline}" என்பதே அவரது வாழ்வின் தாரக மந்திரம். இவரது இணையற்ற தியாகமும் அர்ப்பணிப்பும் இந்திய வரலாற்றில் என்றும் நிலைத்து நிற்கும்.`;
 
     case 'te':
     case 'te-IN':
-      return `భారతదేశపు గొప్ప జాతీయ నాయకుడు ${displayName}. రాష్ట్రం: ${state}. రంగం: ${domain}. "${tagline}". జీవిత చరిత్ర: ${shortBio}`;
+      return `ఈ రోజు మనం ఎంతో గౌరవంతో స్మరించుకుంటున్న జాతీయ నాయకుడు ${heroName}. ${localState} పుణ్యభూమిలో జన్మించిన ఈ మహనీయుడు, మనందరికీ నిస్వార్థ సేవ మరియు ధైర్యాన్ని అందించారు. "${cleanTagline}" అనే ఆయన సందేశం ప్రతి హృదయాన్ని కదిలిస్తుంది. దేశ ప్రగతి కోసం ఆయన చేసిన త్యాగం చిరకాలం గుర్తుండిపోతుంది.`;
 
     case 'mr':
     case 'mr-IN':
-      return `भारताचे थोर राष्ट्रीय महापुरुष ${displayName}. राज्य: ${state}. कार्यक्षेत्र: ${domain}. “${tagline}”. जीवन परिचय: ${shortBio}`;
+      return `आज आपण अत्यंत आदराने स्मरण करूया ${heroName} यांचे. ${localState} च्या पवित्र भूमीत जन्मलेल्या या थोर व्यक्तिमत्त्वाने आपल्याला राष्ट्रनिष्ठा आणि अथांग धैर्याचा मार्ग दाखवला. "${cleanTagline}" हा त्यांचा जीवनमंत्र होता. देशासाठी त्यांचे हे अमूल्य योगदान सदैव प्रेरणादायी राहील.`;
 
     case 'gu':
     case 'gu-IN':
-      return `ભારતના મહાન રાષ્ટ્રીય નાયક ${displayName}. રાજ્ય: ${state}. ક્ષેત્ર: ${domain}. “${tagline}”. પરિચય: ${shortBio}`;
+      return `આજે આપણે હૃદયપૂર્વક વંદન કરીએ છીએ ${heroName}ને. ${localState} ની પવિત્ર ભૂમિમાં જન્મેલા આ મહાન સપૂતે આપણને નિઃસ્વાર્થ સેવા અને હિંમતનો સંદેશ આપ્યો. "${cleanTagline}" એ તેમનો જીવન મંત્ર હતો. દેશ માટેનું તેમનું આ બલિદાન સદાય અમર રહેશે.`;
 
     case 'kn':
     case 'kn-IN':
-      return `ಭಾರತದ ಮಹಾನ್ ರಾಷ್ಟ್ರೀಯ ವೀರ ${displayName}. ರಾಜ್ಯ: ${state}. ಕ್ಷೇತ್ರ: ${domain}. "${tagline}". ಪರಿಚಯ: ${shortBio}`;
+      return `ಇಂದು ನಾವು ಅತ್ಯಂತ ಗೌರವದಿಂದ ಸ್ಮರಿಸುತ್ತಿರುವ ಧೀಮಂತ ನಾಯಕ ${heroName}. ${localState} ನೆಲದಲ್ಲಿ ಜನಿಸಿದ ಈ ಮಹಾನ್ ಚೇತನ, ನಮಗೆ ತ್ಯಾಗ ಮತ್ತು ಸಾಹಸದ ಹೊಸ ದಾರಿಯನ್ನು ತೋರಿಸಿಕೊಟ್ಟರು. "${cleanTagline}" ಎಂಬುದು ಅವರ ಜೀವನ ಸಂದೇಶವಾಗಿತ್ತು. ದೇಶಕ್ಕಾಗಿ ಇವರ ಮಹಾನ್ ಸೇವೆ ಎಂದಿಗೂ ಅಜರಾಮರ.`;
 
     default:
-      return `National Hero Narration: ${name}. From ${state}. Domain: ${domain}. Quote: "${tagline}". Biography: ${shortBio}`;
+      return `Today, we pause to honor the extraordinary journey of ${name}. Rising from ${state}, their life embodies selfless dedication and unwavering courage. Guided by the immortal vision that "${cleanTagline}", their pivotal contributions helped shape the destiny of our nation. Their monumental sacrifice continues to inspire generations of Indians.`;
   }
 }
 
@@ -56,8 +173,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Truncate text to 200 chars for single TTS sentence chunk if needed
-    const cleanText = text.slice(0, 200);
+    const cleanText = text.slice(0, 250);
     const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${lang}&client=tw-ob&q=${encodeURIComponent(
       cleanText
     )}`;
@@ -81,7 +197,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (err) {
-    console.error('TTS Proxy Error:', err);
+    console.error('TTS Stream Error:', err);
   }
 
   return new NextResponse('TTS generation failed', { status: 500 });
@@ -98,62 +214,19 @@ export async function POST(request: NextRequest) {
 
     const shortLang = lang.slice(0, 2).toLowerCase();
 
-    // 1. Generate Authentic Indic Script Text
-    let spokenText = generateIndicScriptText(
+    // Generate Warm, Poetic Documentary Oral Tribute (< 2ms)
+    const spokenText = craftHumanisticStoryTribute(
       hero.name,
       hero.name_local,
       hero.state,
       hero.primary_domain,
       hero.tagline,
       hero.short_bio,
+      hero.is_unsung_reason,
       shortLang
     );
 
-    // 2. Optionally use local Qwen to translate full bio into fluent Indic prose
-    try {
-      if (shortLang !== 'en') {
-        const langNames: Record<string, string> = {
-          hi: 'Hindi (हिंदी)',
-          bn: 'Bengali (বাংলা)',
-          ta: 'Tamil (தமிழ்)',
-          te: 'Telugu (తెలుగు)',
-          mr: 'Marathi (मराठी)',
-          gu: 'Gujarati (ગુજરાતી)',
-          kn: 'Kannada (ಕನ್ನಡ)',
-        };
-
-        const langName = langNames[shortLang] || 'Hindi';
-
-        const qwenPrompt = `Translate the following factual tribute of Indian hero "${hero.name}" into pure, fluent, natural ${langName} script for audio speech narration (keep it to 2-3 inspiring sentences):
-"Hero: ${hero.name}. State: ${hero.state}. Domain: ${hero.primary_domain}. Quote: ${hero.tagline}. Bio: ${hero.short_bio}"
-
-Output ${langName} text only, no English, no markdown:`;
-
-        const qRes = await fetch('http://127.0.0.1:11434/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'qwen2.5:7b',
-            prompt: qwenPrompt,
-            stream: false,
-            keep_alive: '24h',
-            options: { num_predict: 150, temperature: 0.2 },
-          }),
-        });
-
-        if (qRes.ok) {
-          const qJson = await qRes.json();
-          const translated = (qJson.response || '').trim();
-          if (translated && translated.length > 20 && !translated.startsWith('```')) {
-            spokenText = translated;
-          }
-        }
-      }
-    } catch (e) {
-      // Use fallback template
-    }
-
-    // Split text into speakable chunks (under 180 chars each) for seamless audio playback
+    // Split text into natural, calm spoken clauses (under 180 chars each)
     const sentences = spokenText
       .split(/(?<=[।\.!\?])\s+/)
       .map((s) => s.trim())
