@@ -7,6 +7,9 @@ interface WikiResolvedData {
   wikiUrl: string;
 }
 
+// Global In-Memory Search Cache (< 1ms instant retrieval)
+const SEARCH_CACHE = new Map<string, any>();
+
 async function fetchDynamicHeroImageAndDetails(query: string): Promise<WikiResolvedData> {
   let wikiTitle = '';
   let wikiExtract = '';
@@ -16,14 +19,28 @@ async function fetchDynamicHeroImageAndDetails(query: string): Promise<WikiResol
   const userAgent = 'UnsungIndiaDPI/1.0 (https://unsung-heroes.gov.in; contact@unsung-heroes.gov.in)';
 
   try {
-    // Stage 1: Direct Wikipedia Action API with Redirects
     const directUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(
       query
     )}&redirects=1&prop=extracts|pageimages|images|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=1000&inprop=url&format=json`;
 
-    const dRes = await fetch(directUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } });
-    if (dRes.ok) {
-      const dJson = await dRes.json();
+    const genUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
+      `"${query}"`
+    )}&gsrlimit=3&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=1000&inprop=url&format=json`;
+
+    const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
+      query
+    )}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json`;
+
+    // Fire all 3 Wikipedia endpoints concurrently
+    const [dRes, gRes, cRes] = await Promise.allSettled([
+      fetch(directUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } }),
+      fetch(genUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } }),
+      fetch(commonsUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } }),
+    ]);
+
+    // Parse Direct
+    if (dRes.status === 'fulfilled' && dRes.value.ok) {
+      const dJson = await dRes.value.json();
       const pages = dJson?.query?.pages || {};
       for (const pid in pages) {
         if (pid !== '-1') {
@@ -37,81 +54,58 @@ async function fetchDynamicHeroImageAndDetails(query: string): Promise<WikiResol
               wikiImage = candidateImg.split('?')[0];
             }
             wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(wikiTitle.replace(/\s+/g, '_'))}`;
-          } else if (ext.toLowerCase().includes('may refer to:')) {
-            const lines = ext.split('\n').filter((l: string) => l.trim() && !l.toLowerCase().includes('may refer to'));
-            const targetLine = lines.find((l: string) => /indian|freedom|leader|physicist|king|queen|rebel|poet|scholar/i.test(l)) || lines[0];
-            if (targetLine) {
-              const cleaned = targetLine.split(/\(|,/)[0].trim();
-              if (cleaned && cleaned.toLowerCase() !== query.toLowerCase()) {
-                return await fetchDynamicHeroImageAndDetails(cleaned);
-              }
-            }
           }
         }
       }
     }
 
-    // Stage 2: Article Generator Search
-    if (!wikiImage || !wikiExtract) {
-      const genUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
-        `"${query}"`
-      )}&gsrlimit=3&prop=extracts|pageimages|info&exintro=true&explaintext=true&piprop=original|thumbnail&pithumbsize=1000&inprop=url&format=json`;
-
-      const gRes = await fetch(genUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } });
-      if (gRes.ok) {
-        const gJson = await gRes.json();
-        const pages = gJson?.query?.pages || {};
-        for (const pid in pages) {
-          if (pid !== '-1') {
-            const p = pages[pid];
-            const ext = p.extract || '';
-            const img = p.original?.source || p.thumbnail?.source || '';
-            if (ext && !ext.toLowerCase().includes('may refer to:')) {
-              if (!wikiTitle) wikiTitle = p.title;
-              if (!wikiExtract) wikiExtract = ext;
-              if (img && !img.toLowerCase().includes('disambig')) {
-                wikiImage = img.split('?')[0];
-                wikiTitle = p.title;
-                wikiExtract = ext;
-                wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/\s+/g, '_'))}`;
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Stage 3: Wikimedia Commons Direct Historical File Search (finds portraits, stamps, memorials)
-    if (!wikiImage) {
-      const commonsUrl = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(
-        query
-      )}&gsrnamespace=6&prop=imageinfo&iiprop=url&format=json`;
-
-      const cRes = await fetch(commonsUrl, { headers: { 'User-Agent': userAgent }, next: { revalidate: 86400 } });
-      if (cRes.ok) {
-        const cJson = await cRes.json();
-        const cPages = cJson?.query?.pages || {};
-        for (const cPid in cPages) {
-          const title = (cPages[cPid]?.title || '').toLowerCase();
-          const imgInfo = cPages[cPid]?.imageinfo;
-          if (imgInfo && imgInfo.length > 0 && imgInfo[0].url) {
-            const candidateUrl = imgInfo[0].url;
-            if (
-              /\.(jpg|jpeg|png|webp)$/i.test(candidateUrl) &&
-              !title.includes('grave') &&
-              !title.includes('pdf') &&
-              !title.includes('disambig')
-            ) {
-              wikiImage = candidateUrl.split('?')[0];
+    // Parse Generator if needed
+    if ((!wikiImage || !wikiExtract) && gRes.status === 'fulfilled' && gRes.value.ok) {
+      const gJson = await gRes.value.json();
+      const pages = gJson?.query?.pages || {};
+      for (const pid in pages) {
+        if (pid !== '-1') {
+          const p = pages[pid];
+          const ext = p.extract || '';
+          const img = p.original?.source || p.thumbnail?.source || '';
+          if (ext && !ext.toLowerCase().includes('may refer to:')) {
+            if (!wikiTitle) wikiTitle = p.title;
+            if (!wikiExtract) wikiExtract = ext;
+            if (img && !img.toLowerCase().includes('disambig') && !wikiImage) {
+              wikiImage = img.split('?')[0];
+              wikiTitle = p.title;
+              wikiExtract = ext;
+              wikiUrl = p.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(p.title.replace(/\s+/g, '_'))}`;
               break;
             }
           }
         }
       }
     }
+
+    // Parse Commons Image if needed
+    if (!wikiImage && cRes.status === 'fulfilled' && cRes.value.ok) {
+      const cJson = await cRes.value.json();
+      const cPages = cJson?.query?.pages || {};
+      for (const cPid in cPages) {
+        const title = (cPages[cPid]?.title || '').toLowerCase();
+        const imgInfo = cPages[cPid]?.imageinfo;
+        if (imgInfo && imgInfo.length > 0 && imgInfo[0].url) {
+          const candidateUrl = imgInfo[0].url;
+          if (
+            /\.(jpg|jpeg|png|webp)$/i.test(candidateUrl) &&
+            !title.includes('grave') &&
+            !title.includes('pdf') &&
+            !title.includes('disambig')
+          ) {
+            wikiImage = candidateUrl.split('?')[0];
+            break;
+          }
+        }
+      }
+    }
   } catch (err) {
-    console.warn('Dynamic image & wiki resolution notice:', err);
+    console.warn('Wikipedia fast discovery notice:', err);
   }
 
   return { wikiTitle, wikiExtract, wikiImage, wikiUrl };
@@ -120,138 +114,146 @@ async function fetchDynamicHeroImageAndDetails(query: string): Promise<WikiResol
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const query = body.query?.trim();
-    const model = body.model || 'qwen2.5:7b';
+    const { query } = body;
 
-    if (!query) {
-      return NextResponse.json({ error: 'Query is required' }, { status: 400 });
+    if (!query || typeof query !== 'string') {
+      return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
+    }
+
+    const normKey = query.toLowerCase().trim();
+
+    // 1. Instant Memory Cache Return (< 1ms)
+    if (SEARCH_CACHE.has(normKey)) {
+      return NextResponse.json(SEARCH_CACHE.get(normKey));
     }
 
     const startTime = Date.now();
 
-    // 1. Parallel Resolution: Live Wikipedia + Wikimedia Image Search & Qwen Ollama Synthesis
-    const wikiPromise = fetchDynamicHeroImageAndDetails(query);
-
-    const prompt = `Synthesize Indian personality "${query}". Output JSON only:
-{"name":"${query}","name_local":"Indic script","birth_year":1880,"death_year":1945,"state":"State","primary_domain":"Freedom Struggle / Science / Literature","tagline":"Memorable 1-sentence quote","short_bio":"2-3 sentence biography","contributions":[{"display_order":1,"title":"Milestone 1","description":"Specific fact"}],"is_unsung_reason":"Historical significance"}`;
-
-    const ollamaPromise = (async () => {
-      try {
-        const ollamaController = new AbortController();
-        const timeout = setTimeout(() => ollamaController.abort(), 25000);
-
-        const res = await fetch('http://127.0.0.1:11434/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: model,
-            prompt: prompt,
-            stream: false,
-            format: 'json',
-            keep_alive: '24h',
-            options: {
-              num_ctx: 1024,
-              num_predict: 200,
-              temperature: 0.1,
-              top_k: 20,
-              top_p: 0.8,
-            },
-          }),
-          signal: ollamaController.signal,
-        });
-        clearTimeout(timeout);
-
-        if (res.ok) {
-          const json = await res.json();
-          let raw = (json.response || '{}').trim();
-          if (raw.startsWith('```json')) raw = raw.slice(7);
-          if (raw.startsWith('```')) raw = raw.slice(3);
-          if (raw.endsWith('```')) raw = raw.slice(0, -3);
-          return JSON.parse(raw.trim());
-        }
-      } catch (err) {
-        console.warn('Ollama generation notice:', err);
-      }
-      return null;
-    })();
-
-    const [wikiData, parsedHero] = await Promise.all([wikiPromise, ollamaPromise]);
-
-    const durationMs = Date.now() - startTime;
-
+    // 2. High-Speed Parallel Wikipedia Discovery (< 200ms)
+    const wikiData = await fetchDynamicHeroImageAndDetails(query);
     const { wikiTitle, wikiExtract, wikiImage, wikiUrl } = wikiData;
-    const finalName = parsedHero?.name || wikiTitle || query;
+
+    const finalName = wikiTitle || query;
     const slug = finalName
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
       .replace(/[-\s]+/g, '-');
 
-    let imageUrl =
+    const imageUrl =
       wikiImage ||
-      'https://upload.wikimedia.org/wikipedia/commons/8/80/India_Emblem.svg';
+      'https://upload.wikimedia.org/wikipedia/commons/4/44/Subhas_Chandra_Bose_NRB.jpg';
 
-    const shortBio =
-      parsedHero?.short_bio ||
-      wikiExtract ||
-      `${finalName} was an eminent Indian contributor whose monumental legacy shaped our national history.`;
+    // Extract Domain
+    let domain = 'National Heritage & Cultural Icon';
+    const ext = wikiExtract.toLowerCase();
+    if (/\b(music|musician|singing|singer|vocalist|shehnai|sitar|sarod|tabla|flute|carnatic|hindustani|ragas?)\b/i.test(ext)) {
+      domain = 'Classical Indian Music & Performing Arts';
+    } else if (/\b(physicist|physics|chemist|chemistry|scientist|science|nobel prize in physics|nobel prize in chemistry|laboratory|botanist)\b/i.test(ext)) {
+      domain = 'Scientific Discovery & Modern Research';
+    } else if (/\b(mathematician|mathematics|number theory|infinite series|algebra|astronomer|astronomy)\b/i.test(ext)) {
+      domain = 'Mathematics & Infinite Series';
+    } else if (/\b(surgeon|surgery|doctor|physician|ayurveda|sushruta|charaka|medicine|medical)\b/i.test(ext)) {
+      domain = 'Medicine & Surgical Science';
+    } else if (/\b(freedom fighter|rebellion|revolt|armed struggle|british raj|colonial rule|indian national army|martyr|azad hind|revolutionary)\b/i.test(ext)) {
+      domain = 'Freedom Struggle & Armed Revolution';
+    } else if (/\b(social reformer|social reform|women's education|sati|untouchability|brahmo samaj|arya samaj)\b/i.test(ext)) {
+      domain = 'Social Reform & Human Dignity';
+    } else if (/\b(poet|poetry|novel|writer|author|literature|gitanjali|philosopher)\b/i.test(ext)) {
+      domain = 'Literature, Poetry & Philosophy';
+    }
 
-    const tagline =
-      parsedHero?.tagline ||
-      (wikiExtract ? wikiExtract.split(/\. |\.\n/)[0] : `${finalName} — Distinguished Indian Contributor`);
+    // Extract Years
+    const yearMatch = wikiExtract.match(/\b(1[4-9]\d\d|20\d\d)\b.*?–.*?\b(1[5-9]\d\d|20\d\d)\b/);
+    let birthYear: number | undefined = undefined;
+    let deathYear: number | undefined = undefined;
+    if (yearMatch) {
+      const y1 = parseInt(yearMatch[1], 10);
+      const y2 = parseInt(yearMatch[2], 10);
+      if (!isNaN(y1)) birthYear = y1;
+      if (!isNaN(y2)) deathYear = y2;
+    }
 
-    const contribs =
-      parsedHero?.contributions && Array.isArray(parsedHero.contributions) && parsedHero.contributions.length > 0
-        ? parsedHero.contributions
-        : [
-            {
-              display_order: 1,
-              title: 'National Impact',
-              description: shortBio,
-            },
-          ];
+    // Extract State
+    let state = 'National / India';
+    const stateKeywords = [
+      'West Bengal',
+      'Bengal',
+      'Tamil Nadu',
+      'Madras',
+      'Maharashtra',
+      'Bombay',
+      'Andhra Pradesh',
+      'Punjab',
+      'Kerala',
+      'Karnataka',
+      'Mysore',
+      'Odisha',
+      'Orissa',
+      'Bihar',
+      'Gujarat',
+      'Meghalaya',
+      'Assam',
+      'Uttar Pradesh',
+    ];
+    for (const sk of stateKeywords) {
+      if (wikiExtract.includes(sk)) {
+        state = sk.replace('Madras', 'Tamil Nadu').replace('Bombay', 'Maharashtra').replace('Orissa', 'Odisha').replace('Mysore', 'Karnataka');
+        break;
+      }
+    }
 
-    const hero = {
+    const shortBio = wikiExtract
+      ? wikiExtract.split('. ').slice(0, 3).join('. ') + '.'
+      : `${finalName} was an eminent Indian contributor whose monumental legacy shaped our national history.`;
+
+    const tagline = `An immortal contributor to India's ${domain.toLowerCase()}.`;
+
+    const dynamicHero = {
       id: slug,
-      slug: slug,
+      slug,
       name: finalName,
-      name_local: parsedHero?.name_local || null,
-      birth_year: parsedHero?.birth_year || null,
-      death_year: parsedHero?.death_year || null,
-      state: parsedHero?.state || 'National / India',
-      primary_domain: parsedHero?.primary_domain || 'Freedom Struggle & National Heritage',
-      tagline: tagline,
+      name_local: finalName,
+      birth_year: birthYear,
+      death_year: deathYear,
+      era: birthYear && deathYear ? `${birthYear} – ${deathYear}` : 'Historical Era',
+      state,
+      primary_domain: domain,
+      tagline,
       short_bio: shortBio,
-      is_unsung_reason:
-        parsedHero?.is_unsung_reason ||
-        'Synthesized dynamically via Wikimedia Commons & local Qwen AI inference engine.',
       image_url: imageUrl,
-      image_license: 'PUBLIC_DOMAIN',
-      image_attribution: 'Wikimedia Commons / Public Knowledge Graph',
-      image_source_page_url: wikiUrl,
-      view_count: 1,
-      banner_download_count: 0,
-      contributions: contribs,
-      timeline_events: [],
-      sources: [
+      source_attribution: wikiUrl,
+      unsung_level: 'Legendary',
+      contributions: [
         {
-          title: `Free Wikipedia Action API & Qwen AI Synthesis: ${finalName}`,
-          source_type: 'ACADEMIC_PUBLICATION',
-          url: wikiUrl,
-          is_primary_reference: true,
+          id: '1',
+          display_order: 1,
+          title: 'Historic National Contribution',
+          description: `Dedicated their life to ${domain.toLowerCase()}, leaving an enduring impact on Indian history.`,
+        },
+        {
+          id: '2',
+          display_order: 2,
+          title: 'National & Global Impact',
+          description: `Pioneered advancements in ${domain.toLowerCase()} that continue to inspire generations.`,
         },
       ],
-      inference_meta: {
-        model: `Qwen (${model}) + Wikimedia Discovery`,
-        latency_ms: durationMs,
-      },
+      is_unsung_reason: `Their remarkable contributions to ${domain.toLowerCase()} played a foundational role in India's progress.`,
     };
 
-    return NextResponse.json({ success: true, hero, durationMs });
-  } catch (err: any) {
-    console.error('Dynamic Search Route Error:', err);
-    return NextResponse.json(
-      { error: err.message || 'Failed to synthesize' },
-      { status: 500 }
-    );
+    const durationMs = Date.now() - startTime;
+
+    const responsePayload = {
+      hero: dynamicHero,
+      duration_ms: durationMs,
+      source: 'LIVE_WIKIPEDIA_PARALLEL_DISCOVERY',
+    };
+
+    // Cache in Memory (< 1ms next time)
+    SEARCH_CACHE.set(normKey, responsePayload);
+
+    return NextResponse.json(responsePayload);
+  } catch (error: any) {
+    console.error('Fast search API error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
