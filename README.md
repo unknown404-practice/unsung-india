@@ -23,23 +23,16 @@
 The platform features an automated **Multilingual Speech & Audio Narration Engine** allowing every citizen to listen to the heroic stories of India's freedom fighters and contributors across several languages (Hindi, Bengali, Tamil, Telugu, and English).
 
 <div align="center">
-  <video src="assets/multilingual_audio_demo.mp4" controls="controls" width="100%" style="max-width: 100%; border-radius: 8px; border: 1px solid #334155;">
-    <source src="assets/multilingual_audio_demo.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+
+[![▶️ Click to Play Multilingual Audio Demonstration Video](assets/multilingual_video_cover.png)](assets/multilingual_audio_demo.mp4)
+
+### [▶️ Click to Watch & Listen to the Demonstration Video (with Full Audio Track)](assets/multilingual_audio_demo.mp4)
+
 </div>
 
-<br/>
-
-<div align="center">
-  <a href="assets/multilingual_audio_demo.mp4">
-    <img src="assets/multilingual_audio_demo.gif" alt="Multilingual Voice Synthesis Live Motion Preview" width="100%" style="border-radius: 8px; border: 1px solid #334155;" />
-  </a>
-  <p><em>▶️ <b>Live Motion Preview</b>: Instant in-browser animation of multilingual recitation. Click the preview above to view the high-definition video with full audio narration.</em></p>
-</div>
-
-* 🎥 **Direct Video File**: [`assets/multilingual_audio_demo.mp4`](assets/multilingual_audio_demo.mp4) (High-Definition H.264 / AAC, 2.09 MB)
-* 🎬 **Archival WebM Capture**: [`assets/multilingual_audio_demo.webm`](assets/multilingual_audio_demo.webm) (Original Raw Capture, 12.3 MB)
+* 🎥 **Original Video File**: [`assets/multilingual_audio_demo.mp4`](assets/multilingual_audio_demo.mp4) *(High-Definition H.264 / AAC Stereo Soundtrack, 2.4 MB)*
+* 🌐 **Direct Browser Playback**: [Open Video Directly in New Tab](https://github.com/unknown404-practice/unsung-india/raw/master/assets/multilingual_audio_demo.mp4)
+* 🎬 **Archival WebM Capture**: [`assets/multilingual_audio_demo.webm`](assets/multilingual_audio_demo.webm) *(Original Raw Capture, 12.3 MB)*
 
 ---
 
@@ -114,68 +107,62 @@ The entire platform is fully containerized with **Docker Compose**, running a 5-
 The following architectural graph tree visualizes the entire system hierarchy, module separation, containerized services, and dataflow:
 
 ```mermaid
-flowchart TD
-    classDef root fill:#ff9933,stroke:#ffffff,stroke-width:2px,color:#000000,font-weight:bold;
-    classDef frontend fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#ffffff;
-    classDef backend fill:#0f172a,stroke:#10b981,stroke-width:2px,color:#ffffff;
-    classDef ai fill:#3b1e08,stroke:#f59e0b,stroke-width:2px,color:#ffffff;
-    classDef db fill:#172554,stroke:#60a5fa,stroke-width:2px,color:#ffffff;
-    classDef media fill:#2e1065,stroke:#c084fc,stroke-width:2px,color:#ffffff;
+flowchart TB
+    %% Root Node
+    ROOT["🇮🇳 UNSUNG HEROES OF INDIA<br/><b>National Digital Public Infrastructure (DPI)</b>"]
 
-    ROOT["🇮🇳 Unsung Heroes of India (National DPI)"]:::root
-
-    ROOT --> MEDIA["📂 assets/ (Media & Proof)"]:::media
-    ROOT --> FRONT["⚡ frontend/ (Next.js 14 App Router)"]:::frontend
-    ROOT --> BACK["🐍 backend/ (FastAPI REST Service)"]:::backend
-    ROOT --> AI_TIER["🧠 Sovereign AI (Qwen 2.5 + Ollama)"]:::ai
-    ROOT --> DB_TIER["🐘 Database (PostgreSQL 16)"]:::db
-
-    subgraph MEDIA_TREE["Media & Demonstration Assets"]
-        MEDIA --> M1["platform_preview.png (Platform UI Screenshot)"]
-        MEDIA --> M2["multilingual_audio_demo.mp4 (High-Def Indic Audio Video)"]
-        MEDIA --> M3["multilingual_audio_demo.gif (Instant Autoplay Looping Motion)"]
+    %% Tier 1: Assets & Showcase
+    subgraph TIER_ASSETS["📂 1. Verification & Media Assets Layer"]
+        direction TB
+        A1["platform_preview.png (Platform Portal Showcase)"]
+        A2["multilingual_video_cover.png (Narration Studio Poster)"]
+        A3["multilingual_audio_demo.mp4 (High-Def Multilingual Recitation with Stereo Audio)"]
     end
 
-    subgraph FRONTEND_TREE["Frontend Application Layer (:3000)"]
-        FRONT --> F_PAGES["app/ (App Router Pages)"]
-        F_PAGES --> FP1["/ (Cinematic Home & Precision Search)"]
-        F_PAGES --> FP2["/explore (Catalog & Era Filters)"]
-        F_PAGES --> FP3["/heroes/[slug] (Deep Biography & Audio)"]
-        F_PAGES --> FP4["/banners (300 DPI Poster Studio)"]
-        F_PAGES --> FP5["/map & /timeline (Geospatial & Eras)"]
-
-        FRONT --> F_COMP["components/ (UI Modules)"]
-        F_COMP --> FC1["AudioNarrator (Indic Speech Player)"]
-        F_COMP --> FC2["BannerStudio (Anti-Crop Face Detection)"]
-        F_COMP --> FC3["IndiaHeritageMap (State Hero Footprint)"]
-
-        FRONT --> F_LIB["lib/ (Core Engine & Caching)"]
-        F_LIB --> FL1["cloud-ai.ts (Micro-Prompt Engine)"]
-        F_LIB --> FL2["api.ts (Rank-1 Resolution Client)"]
-        F_LIB --> FL3["In-Memory Fast Cache (< 0.01ms)"]
+    %% Tier 2: Frontend
+    subgraph TIER_FRONTEND["⚡ 2. Frontend Application Layer (Next.js 14 App Router on :3000)"]
+        direction TB
+        F_APP["App Router Pages & Navigation<br/>• / (Cinematic Search & Discover)<br/>• /explore (National Hero Catalog & Era Filters)<br/>• /heroes/:slug (Full Historical Chronicle & Story)<br/>• /banners (300 DPI Automated Public Signage Studio)<br/>• /map & /timeline (Geospatial & Historical Eras)"]
+        F_COMP["Interactive React UI Components<br/>• SearchBar (Sub-Second Rank-1 Identity Resolution)<br/>• AudioNarrator (Multilingual Speech Recitation Player)<br/>• BannerStudio (Anti-Crop Face Detection Poster Factory)<br/>• IndiaHeritageMap (Interactive State Leader Footprints)"]
+        F_LIB["Core Utilities & Acceleration<br/>• cloud-ai.ts (Sub-Millisecond Micro-Prompt AI Engine)<br/>• api.ts (Universal Resolution & Wikipedia Client)<br/>• In-Memory Fast Cache (< 0.01ms Synthesis Retrieval)"]
+        F_APP --> F_COMP --> F_LIB
     end
 
-    subgraph BACKEND_TREE["Backend Services Layer (:8001)"]
-        BACK --> B_CORE["src/app/"]
-        B_CORE --> B1["heroes/ (Catalog Service)"]
-        B_CORE --> B2["banners/ (Pillow Vector Renderer)"]
-        B_CORE --> B3["submissions/ (Citizen Vetting Pipeline)"]
-        B_CORE --> B4["wikipedia/ (Verification Ingestion)"]
-        B_CORE --> B5["auth/ (JWT Security & RBAC)"]
+    %% Tier 3: Backend
+    subgraph TIER_BACKEND["🐍 3. Backend Services Layer (FastAPI REST Engine on :8001)"]
+        direction TB
+        B_ROUTES["FastAPI Service Modules<br/>• /api/v1/heroes (Hero Catalog CRUD & Eras)<br/>• /api/v1/banners (Pillow High-DPI Vector Signage)<br/>• /api/v1/submissions (Citizen Hero Vetting Desk)<br/>• /api/v1/auth (JWT Security & Role-Based Access)"]
+        B_PIPELINE["Archival & Ingestion Pipeline<br/>• Wikipedia & Wikimedia Commons Sync<br/>• Primary Source Citation Verification<br/>• High-DPI Poster Generation Pipeline"]
+        B_ROUTES --> B_PIPELINE
     end
 
-    subgraph AI_PIPELINE["Sovereign Local Intelligence Mesh"]
-        AI_TIER --> A1["Ollama Service (Host: 11434 / Docker: 11435)"]
-        A1 --> A2["Qwen 2.5 1.5B (Sub-Second Turbo Inference)"]
-        A1 --> A3["Qwen 2.5 7B (Deep Historical Synthesis)"]
-        AI_TIER --> A4["Wikipedia / Wikimedia Commons (Archival Citations & Verified Portraits)"]
+    %% Tier 4: Local AI
+    subgraph TIER_AI["🧠 4. Sovereign Local Intelligence Mesh (:11434 / :11435)"]
+        direction TB
+        AI_STACK["Local Ollama Engine (Host / Docker)<br/>• Qwen 2.5 1.5B (Turbo Sub-Second Inference)<br/>• Qwen 2.5 7B (Deep Biographical Historical Synthesis)"]
+        AI_OPT["Inference Optimizations<br/>• 18-Token Ultra-Compact Micro-Prompt Budgeting<br/>• Permanent RAM Model Pinning (keep_alive: -1)<br/>• Wikipedia Verified Archival Portrait Matcher"]
+        AI_STACK --> AI_OPT
     end
 
-    subgraph DATA_STORAGE["Relational Persistence Tier"]
-        DB_TIER --> D1["PostgreSQL 16 Engine (:5433)"]
-        D1 --> D2["Heroes & Historical Eras Table"]
-        D1 --> D3["Public Proposals & Verified Citations"]
+    %% Tier 5: Persistence
+    subgraph TIER_DB["🐘 5. Relational Persistence Layer (PostgreSQL 16 on :5433)"]
+        direction TB
+        DB_MODELS["PostgreSQL Relational Schema<br/>• Heroes Catalog & Regional State Taxonomy<br/>• Historical Eras & Armed Struggle Milestones<br/>• Community Proposals & Vetted Primary Citations"]
     end
+
+    %% Tier 6: Docker
+    subgraph TIER_DOCKER["🐳 6. Sovereign Containerization (Docker Compose Mesh)"]
+        direction TB
+        DOCKER_NODES["5-Service Production Cluster (docker compose up -d)<br/>• frontend (:3000) • backend (:8001) • db (:5433) • ollama (:11435) • ollama_pull"]
+    end
+
+    %% Vertical Dataflow Connectors
+    ROOT ==> TIER_ASSETS
+    TIER_ASSETS ==> TIER_FRONTEND
+    TIER_FRONTEND ==> TIER_BACKEND
+    TIER_BACKEND ==> TIER_AI
+    TIER_AI ==> TIER_DB
+    TIER_DB ==> TIER_DOCKER
 ```
 
 ---
@@ -187,8 +174,8 @@ unsung-heroes-india/
 │
 ├── assets/                                 # Platform Media & Demonstration Assets
 │   ├── platform_preview.png                # High-Resolution UI Screenshot
-│   ├── multilingual_audio_demo.mp4         # High-Definition Indic Audio Video (2.09 MB)
-│   ├── multilingual_audio_demo.gif         # Instant Autoplay Looping Motion Preview
+│   ├── multilingual_video_cover.png        # Video Player Showcase Card
+│   ├── multilingual_audio_demo.mp4         # High-Definition Indic Audio Video (2.4 MB)
 │   └── multilingual_audio_demo.webm        # Archival WebM Raw Capture (12.3 MB)
 │
 ├── frontend/                               # Next.js 14 Cinematic Web Application
