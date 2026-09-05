@@ -22,12 +22,12 @@
 ### 🎙️ Multilingual Voice Synthesis Demonstration (Speaks in Multiple Indic Languages)
 The platform features an automated **Multilingual Speech & Audio Narration Engine** allowing every citizen to listen to the heroic stories of India's freedom fighters and contributors across several languages (Hindi, Bengali, Tamil, Telugu, and English).
 
+https://github.com/user-attachments/assets/9029dd80-ce77-4cba-b162-edf52fba17e8
+
 <div align="center">
-
-[![▶️ Click to Play Multilingual Audio Demonstration Video](assets/multilingual_video_cover.png)](assets/multilingual_audio_demo.mp4)
-
-### [▶️ Click to Watch & Listen to the Demonstration Video (with Full Audio Track)](assets/multilingual_audio_demo.mp4)
-
+  <video src="https://github.com/user-attachments/assets/9029dd80-ce77-4cba-b162-edf52fba17e8" controls="controls" width="100%" style="max-width: 100%; border-radius: 8px;">
+    Your browser does not support playing this video directly.
+  </video>
 </div>
 
 * 🎥 **Original Video File**: [`assets/multilingual_audio_demo.mp4`](assets/multilingual_audio_demo.mp4) *(High-Definition H.264 / AAC Stereo Soundtrack, 2.4 MB)*
