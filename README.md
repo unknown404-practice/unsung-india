@@ -24,12 +24,6 @@ The platform features an automated **Multilingual Speech & Audio Narration Engin
 
 https://github.com/user-attachments/assets/9029dd80-ce77-4cba-b162-edf52fba17e8
 
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/9029dd80-ce77-4cba-b162-edf52fba17e8" controls="controls" width="100%" style="max-width: 100%; border-radius: 8px;">
-    Your browser does not support playing this video directly.
-  </video>
-</div>
-
 * 🎥 **Original Video File**: [`assets/multilingual_audio_demo.mp4`](assets/multilingual_audio_demo.mp4) *(High-Definition H.264 / AAC Stereo Soundtrack, 2.4 MB)*
 * 🌐 **Direct Browser Playback**: [Open Video Directly in New Tab](https://github.com/unknown404-practice/unsung-india/raw/master/assets/multilingual_audio_demo.mp4)
 
