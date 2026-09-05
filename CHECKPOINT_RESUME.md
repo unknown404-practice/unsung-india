@@ -33,9 +33,7 @@
 ## 🚀 2. HOW TO RESUME TOMORROW (EXACT COMMANDS)
 
 ### **Option A: The 1-Command Docker Launch (All Services in Container)**
-Open PowerShell:
-```powershell
-cd C:\Users\RANADEEP\Desktop\.vscode\unsung-heroes-india
+```bash
 docker compose up -d
 ```
 * **App URL**: `http://localhost:3000`
@@ -48,18 +46,15 @@ docker compose up -d
 ### **Option B: Direct Native Local Development (2 Terminals)**
 
 #### **Terminal 1: Start Ollama AI Engine**
-```powershell
+```bash
 # Optional: enable integrated Radeon GPU acceleration via Vulkan
-$env:OLLAMA_IGPU_ENABLE="1"
-$env:OLLAMA_VULKAN="1"
-
 ollama serve
 ```
 *(If Ollama is already running in your Windows taskbar system tray, it is already listening on port 11434).*
 
 #### **Terminal 2: Start Next.js Frontend**
-```powershell
-cd C:\Users\RANADEEP\Desktop\.vscode\unsung-heroes-india\frontend
+```bash
+cd frontend
 npm run dev
 ```
 
@@ -85,14 +80,13 @@ npm run dev
 ## ✅ 4. VERIFICATION COMMANDS (TO RUN ANYTIME)
 
 To verify the entire frontend builds cleanly:
-```powershell
-cd C:\Users\RANADEEP\Desktop\.vscode\unsung-heroes-india\frontend
+```bash
+cd frontend
 npm run build
 ```
 *(Expected: `✓ Compiled successfully`, `✓ Generating static pages (17/17)`, 0 errors).*
 
 To verify search accuracy across all 14 figures:
-```powershell
-cd C:\Users\RANADEEP\Desktop\.vscode\unsung-heroes-india
+```bash
 node scripts/test_full_search_flow.js
 ```

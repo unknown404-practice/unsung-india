@@ -248,31 +248,28 @@ cd unsung-india
 
 ---
 
-### 💻 2. Launch Localhost (The Master Command)
+### 💻 2. Launch Local Development (Quick Start)
 
 #### **Step A: Start the Frontend**
-```powershell
-cd C:\Users\RANADEEP\Desktop\.vscode\unsung-heroes-india\frontend
+```bash
+# Navigate into frontend and start the dev server
+cd frontend
 npm run dev
 ```
 > **Access URL**: Open your local browser at `http://localhost:3000`
 
 #### **Step B (Optional): Start Local Qwen AI with Ollama**
-In a separate terminal, start Ollama:
-```powershell
-# Optional: Enable AMD Radeon GPU acceleration via Vulkan:
-$env:OLLAMA_IGPU_ENABLE="1"
-$env:OLLAMA_VULKAN="1"
-
+In a separate terminal, start your local Ollama AI engine:
+```bash
+# Optional GPU acceleration: Windows ($env:OLLAMA_IGPU_ENABLE="1") / Linux (OLLAMA_IGPU_ENABLE=1)
 ollama serve
 ```
 
 ---
 
 ### 🐳 3. Or Launch Everything in 1 Command with Docker
-If you have Docker Desktop installed, you can launch the complete ecosystem (Frontend, Backend, PostgreSQL, and Ollama) with a single command:
-```powershell
-cd C:\Users\RANADEEP\Desktop\.vscode\unsung-heroes-india
+If you have Docker installed, launch the complete full-stack ecosystem (Frontend, Backend, PostgreSQL, and Ollama) with a single command from the project root:
+```bash
 docker compose up -d
 ```
 * **Frontend Web App**: `http://localhost:3000`
