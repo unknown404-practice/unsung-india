@@ -32,7 +32,6 @@ The platform features an automated **Multilingual Speech & Audio Narration Engin
 
 * 🎥 **Original Video File**: [`assets/multilingual_audio_demo.mp4`](assets/multilingual_audio_demo.mp4) *(High-Definition H.264 / AAC Stereo Soundtrack, 2.4 MB)*
 * 🌐 **Direct Browser Playback**: [Open Video Directly in New Tab](https://github.com/unknown404-practice/unsung-india/raw/master/assets/multilingual_audio_demo.mp4)
-* 🎬 **Archival WebM Capture**: [`assets/multilingual_audio_demo.webm`](assets/multilingual_audio_demo.webm) *(Original Raw Capture, 12.3 MB)*
 
 ---
 
@@ -175,8 +174,7 @@ unsung-heroes-india/
 ├── assets/                                 # Platform Media & Demonstration Assets
 │   ├── platform_preview.png                # High-Resolution UI Screenshot
 │   ├── multilingual_video_cover.png        # Video Player Showcase Card
-│   ├── multilingual_audio_demo.mp4         # High-Definition Indic Audio Video (2.4 MB)
-│   └── multilingual_audio_demo.webm        # Archival WebM Raw Capture (12.3 MB)
+│   └── multilingual_audio_demo.mp4         # High-Definition Indic Audio Video (2.4 MB)
 │
 ├── frontend/                               # Next.js 14 Cinematic Web Application
 │   ├── app/                                # App Router Pages & REST API Endpoints
