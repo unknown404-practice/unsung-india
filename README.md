@@ -252,8 +252,9 @@ cd unsung-india
 
 #### **Step A: Start the Frontend**
 ```bash
-# Navigate into frontend and start the dev server
+# Navigate into frontend, install dependencies, and start the dev server:
 cd frontend
+npm install
 npm run dev
 ```
 > **Access URL**: Open your local browser at `http://localhost:3000`
