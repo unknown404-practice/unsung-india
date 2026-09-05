@@ -69,16 +69,16 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* 3. Free-for-Lifetime Architecture */}
+      {/* 3. Self-Hosted Docker Sovereign Topology */}
       <div className="p-8 rounded-2xl bg-glass border border-white/10 space-y-4">
         <div className="flex items-center gap-2 text-saffron-400">
           <Cpu className="w-5 h-5" />
           <h3 className="font-cinematic text-lg font-bold text-white">
-            Free-Tier Lifetime Hosting Topology
+            Self-Hosted Sovereign Docker Topology
           </h3>
         </div>
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-          The entire application is designed to operate 100% free of hosting cost on modern managed free tiers: Next.js on <strong>Vercel Hobby</strong>, FastAPI on <strong>Render / Railway</strong>, and serverless Postgres on <strong>Neon / Supabase</strong>. Incremental Static Regeneration (ISR) ensures instantaneous page loads directly from edge CDN caches.
+          The entire application is 100% self-hosted and containerized using <strong>Docker Compose</strong>: Next.js Frontend, FastAPI Backend, local <strong>PostgreSQL</strong> database, and containerized <strong>Ollama with Qwen AI</strong> local models. Zero cloud API dependency, complete privacy, full data sovereignty, and instantaneous performance.
         </p>
       </div>
     </div>
